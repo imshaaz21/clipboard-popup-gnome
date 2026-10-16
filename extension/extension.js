@@ -30,7 +30,7 @@ export default class ClipboardPopupExtension extends Extension {
         this._menu.actor.hide();
         this._menuSignalId = this._menu.connect('open-state-changed', (_m, open) => {
             if (!open)
-                this._sourceActorCleanup();
+                this._parkAnchor();
         });
         this._timeoutIds = new Set();
 
@@ -61,8 +61,9 @@ export default class ClipboardPopupExtension extends Extension {
         this._menu = null;
         this._anchor.destroy();
         this._anchor = null;
-        this._history._save();
+        this._history.save();
         this._history = null;
+        this._device = null;
         this._settings = null;
     }
 
@@ -89,7 +90,12 @@ export default class ClipboardPopupExtension extends Extension {
         if (selType !== Meta.SelectionType.SELECTION_CLIPBOARD || this._suppressCapture)
             return;
         const clipboard = St.Clipboard.get_default();
+        // Skip secrets flagged by password managers.
+        if (clipboard.get_mimetypes(CLIP).includes('x-kde-passwordManagerHint'))
+            return;
         clipboard.get_text(CLIP, (_cb, text) => {
+            if (!this._history)
+                return;
             if (text && text.trim()) {
                 const entry = this._history.addText(text);
                 if (entry)
@@ -98,9 +104,9 @@ export default class ClipboardPopupExtension extends Extension {
             }
             // Not text - try an image.
             clipboard.get_content(CLIP, 'image/png', (_cb2, bytes) => {
-                if (bytes) {
-                    this._history.addImage(bytes);
-                    this._history.trim(this._settings.get_int('history-size'));
+                if (bytes && this._history) {
+                    if (this._history.addImage(bytes))
+                        this._history.trim(this._settings.get_int('history-size'));
                 }
             });
         });
@@ -183,7 +189,7 @@ export default class ClipboardPopupExtension extends Extension {
 
         if (entry.kind === 'image') {
             const setImage = bytes => {
-                if (bytes)
+                if (bytes && this._history)
                     clipboard.set_content(CLIP, 'image/png', bytes);
             };
             if (entry._bytes) {
@@ -210,8 +216,12 @@ export default class ClipboardPopupExtension extends Extension {
     // whatever window had focus before the popup grabbed it.
     _sendPaste() {
         try {
-            const seat = Clutter.get_default_backend().get_default_seat();
-            const device = seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+            // One cached device; creating one per paste leaks.
+            if (!this._device) {
+                this._device = Clutter.get_default_backend().get_default_seat()
+                    .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+            }
+            const device = this._device;
             const t = global.get_current_time();
             device.notify_keyval(t, Clutter.KEY_Control_L, Clutter.KeyState.PRESSED);
             device.notify_keyval(t, Clutter.KEY_v, Clutter.KeyState.PRESSED);
@@ -222,7 +232,7 @@ export default class ClipboardPopupExtension extends Extension {
         }
     }
 
-    _sourceActorCleanup() {
+    _parkAnchor() {
         // keep anchor parked offscreen so it never catches input
         this._anchor.set_position(-1, -1);
     }

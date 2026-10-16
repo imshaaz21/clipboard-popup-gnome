@@ -1,6 +1,6 @@
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
-import Gtk from 'gi://Gtk';
+import Gtk from 'gi://Gtk?version=4.0';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
@@ -36,9 +36,19 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         settings.bind('paste-on-select', pasteRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(pasteRow);
 
-        const shortcutRow = new Adw.ActionRow({
-            title: _('Popup shortcut'),
-            subtitle: _('Default: Super+V. Change it in Settings → Keyboard → Custom Shortcuts, or edit the popup-shortcut gsetting.'),
+        const shortcutRow = new Adw.EntryRow({
+            title: _('Popup shortcut (e.g. <Super>v, empty disables)'),
+            show_apply_button: true,
+            text: settings.get_strv('popup-shortcut')[0] ?? '',
+        });
+        shortcutRow.connect('apply', () => {
+            const accel = shortcutRow.text.trim();
+            if (accel && !Gtk.accelerator_parse(accel)[0]) {
+                shortcutRow.add_css_class('error');
+                return;
+            }
+            shortcutRow.remove_css_class('error');
+            settings.set_strv('popup-shortcut', accel ? [accel] : []);
         });
         group.add(shortcutRow);
     }

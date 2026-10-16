@@ -23,8 +23,10 @@ export class History {
                 const [ok, data] = f.load_contents_finish(res);
                 if (!ok)
                     return;
-                const entries = JSON.parse(new TextDecoder().decode(data));
-                this.entries = entries.filter(e => e.kind === 'text' || e.kind === 'image');
+                const entries = JSON.parse(new TextDecoder().decode(data))
+                    .filter(e => e.kind === 'text' || e.kind === 'image');
+                // Merge: copies captured before the load finished stay on top.
+                this.entries = this.entries.concat(entries);
                 for (const e of this.entries) {
                     if (e.id >= this._nextId)
                         this._nextId = e.id + 1;
@@ -35,7 +37,7 @@ export class History {
         });
     }
 
-    _save() {
+    save() {
         try {
             GLib.mkdir_with_parents(this._dir, 0o700);
             const file = Gio.File.new_for_path(this._file);
@@ -61,11 +63,16 @@ export class History {
             return null;
         const entry = {id: this._nextId++, kind: 'text', text, pinned: false, timestamp: Date.now()};
         this.entries.unshift(entry);
+        this.save();
         return entry;
     }
 
     // bytes: GLib.Bytes of PNG data. Writes it to the images dir.
     addImage(bytes) {
+        // Dedup across the whole history, not just the newest entry.
+        const hash = bytes.hash();
+        if (this.entries.some(e => e.kind === 'image' && e.imgHash === hash))
+            return null;
         try {
             GLib.mkdir_with_parents(this._imagesDir, 0o700);
             const name = `img-${Date.now()}.png`;
@@ -79,9 +86,12 @@ export class History {
                         console.error(`clipboard-popup: image write failed: ${e.message}`);
                     }
                 });
-            const entry = {id: this._nextId++, kind: 'image', imageFile: path, pinned: false, timestamp: Date.now()};
+            const entry = {id: this._nextId++, kind: 'image', imageFile: path, imgHash: hash, pinned: false, timestamp: Date.now()};
             entry._bytes = bytes; // kept in memory so selecting it needs no disk read
+            for (const e of this.entries)
+                delete e._bytes; // only the newest image stays in memory
             this.entries.unshift(entry);
+            this.save();
             return entry;
         } catch (e) {
             console.error(`clipboard-popup: image save failed: ${e.message}`);
@@ -93,7 +103,7 @@ export class History {
         const e = this.entries.find(x => x.id === id);
         if (e) {
             e.pinned = !e.pinned;
-            this._save();
+            this.save();
         }
     }
 
@@ -104,7 +114,7 @@ export class History {
         if (e.kind === 'image')
             try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
         this.entries = this.entries.filter(x => x.id !== id);
-        this._save();
+        this.save();
     }
 
     clear() {
@@ -114,12 +124,13 @@ export class History {
                 try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
         }
         this.entries = this.entries.filter(e => e.pinned);
-        this._save();
+        this.save();
     }
 
     // Drop oldest unpinned entries beyond the limit.
     trim(maxSize) {
         let unpinnedCount = this.entries.filter(e => !e.pinned).length;
+        const before = this.entries.length;
         for (let i = this.entries.length - 1; i >= 0 && unpinnedCount > maxSize; i--) {
             const e = this.entries[i];
             if (e.pinned)
@@ -129,6 +140,7 @@ export class History {
             this.entries.splice(i, 1);
             unpinnedCount--;
         }
-        this._save();
+        if (this.entries.length !== before)
+            this.save();
     }
 }

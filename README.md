@@ -4,7 +4,7 @@
 ![GNOME Shell 45-50](https://img.shields.io/badge/GNOME_Shell-45%E2%80%9350-4a86cf)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_me_a_coffee-FFDD00?style=flat&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/imshaaz)
 
-A GNOME Shell extension that brings the Windows **Win+V** clipboard experience to GNOME: press **Super+V** and a popup opens right where your mouse pointer is - like a right-click menu - listing your clipboard history. Pick an entry and it is pasted into whatever you were typing in.
+A GNOME Shell extension that brings the Windows **Win+V** clipboard manager experience to GNOME: press **Super+V** and a clipboard history popup opens right where your mouse pointer is - like a right-click menu. Text and images, pin favorite entries, paste-on-select, private mode, and keyboard cycling. It is the GNOME equivalent of the Windows clipboard history popup, and a pointer-anchored alternative to top-bar clipboard indicators like GPaste or Clipboard Indicator. Works on Wayland and X11, on Ubuntu, Fedora, Arch and any GNOME 45-50 desktop.
 
 | Popup at pointer | Panel icon | Preferences |
 |:---:|:---:|:---:|
@@ -66,6 +66,24 @@ Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.gi
 - **Shortcuts** - editable in preferences; popup (`<Super>v`), next/prev entry cycling, private-mode toggle; empty disables
 
 The panel icon opens the popup on left-click; right-click toggles private mode. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Paste-on-select sends Shift+Insert, which terminals accept too, so it works in every app.
+
+## FAQ
+
+**Is there a Win+V clipboard history on Linux?**
+
+Yes - this extension. On Windows, `Win+V` opens the clipboard history at the cursor. Here `Super+V` does the same on GNOME, and it also stores images.
+
+**How do I get clipboard history on GNOME / Ubuntu / Fedora?**
+
+Install this extension, then press `Super+V` (or click the panel icon). Everything you copy - text and images - is kept in the popup until cleared.
+
+**Does it work on Wayland?**
+
+Yes. It uses GNOME Shell's native clipboard signals, so Wayland and X11 behave identically.
+
+**GPaste vs Clipboard Indicator vs this?**
+
+GPaste and Clipboard Indicator open a menu from the top panel. This extension opens the popup *where your mouse pointer is*, which is what Win+V users expect, and it is the only one of the three with image thumbnails in the popup.
 
 ## Translations
 

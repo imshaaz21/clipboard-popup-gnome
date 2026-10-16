@@ -86,6 +86,34 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         settings.bind('cache-only-favorites', cacheRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cacheRow);
 
+        const keyswitchRow = new Adw.SwitchRow({
+            title: _('Enable keybindings'),
+            subtitle: _('Master switch for all shortcuts'),
+        });
+        settings.bind('enable-keybindings', keyswitchRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(keyswitchRow);
+
+        const searchRow = new Adw.SwitchRow({
+            title: _('Typeahead search'),
+            subtitle: _('Filter history as you type in the popup'),
+        });
+        settings.bind('enable-typeahead-search', searchRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(searchRow);
+
+        const primaryRow = new Adw.SwitchRow({
+            title: _('Track primary selection'),
+            subtitle: _('Record text selected with the mouse, not just copied'),
+        });
+        settings.bind('process-primary-selection', primaryRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(primaryRow);
+
+        const mimeRow = new Adw.SwitchRow({
+            title: _('Ignore password-manager contents'),
+            subtitle: _('Skip clipboard contents flagged by password managers'),
+        });
+        settings.bind('ignore-password-mimes', mimeRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(mimeRow);
+
         const keysGroup = new Adw.PreferencesGroup({title: _('Keyboard shortcuts')});
         page.add(keysGroup);
 
@@ -111,5 +139,6 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         makeShortcutRow('next-entry', _('Next entry (older)'));
         makeShortcutRow('prev-entry', _('Previous entry (newer)'));
         makeShortcutRow('toggle-private-mode', _('Toggle private mode'));
+        makeShortcutRow('clear-history', _('Clear history'));
     }
 }

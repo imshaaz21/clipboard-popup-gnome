@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 11:03+0530\n"
+"POT-Creation-Date: 2026-10-16 11:04+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension/actions.js:53
+#: extension/actions.js:53 extension/menu.js:79
 msgid "Image"
 msgstr ""
 
@@ -29,23 +29,31 @@ msgstr ""
 msgid "Private mode off"
 msgstr ""
 
-#: extension/extension.js:157
+#: extension/extension.js:66
+msgid "History cleared"
+msgstr ""
+
+#: extension/extension.js:165
 msgid "Copied to history"
 msgstr ""
 
-#: extension/extension.js:167
+#: extension/extension.js:177
 msgid "Image copied to history"
 msgstr ""
 
-#: extension/menu.js:72
+#: extension/menu.js:74
+msgid "Type to search"
+msgstr ""
+
+#: extension/menu.js:92
 msgid "Clipboard history is empty"
 msgstr ""
 
-#: extension/menu.js:93
+#: extension/menu.js:116
 msgid "Clear history (keeps pinned)"
 msgstr ""
 
-#: extension/menu.js:98
+#: extension/menu.js:121
 msgid "Really clear? Click again"
 msgstr ""
 
@@ -133,26 +141,62 @@ msgstr ""
 msgid "Only pinned entries survive a restart"
 msgstr ""
 
-#: extension/prefs.js:89
-msgid "Keyboard shortcuts"
+#: extension/prefs.js:90
+msgid "Enable keybindings"
 msgstr ""
 
-#: extension/prefs.js:94
-msgid "empty disables"
+#: extension/prefs.js:91
+msgid "Master switch for all shortcuts"
 msgstr ""
 
-#: extension/prefs.js:110
-msgid "Popup at pointer"
+#: extension/prefs.js:97
+msgid "Typeahead search"
+msgstr ""
+
+#: extension/prefs.js:98
+msgid "Filter history as you type in the popup"
+msgstr ""
+
+#: extension/prefs.js:104
+msgid "Track primary selection"
+msgstr ""
+
+#: extension/prefs.js:105
+msgid "Record text selected with the mouse, not just copied"
 msgstr ""
 
 #: extension/prefs.js:111
-msgid "Next entry (older)"
+msgid "Ignore password-manager contents"
 msgstr ""
 
 #: extension/prefs.js:112
+msgid "Skip clipboard contents flagged by password managers"
+msgstr ""
+
+#: extension/prefs.js:117
+msgid "Keyboard shortcuts"
+msgstr ""
+
+#: extension/prefs.js:122
+msgid "empty disables"
+msgstr ""
+
+#: extension/prefs.js:138
+msgid "Popup at pointer"
+msgstr ""
+
+#: extension/prefs.js:139
+msgid "Next entry (older)"
+msgstr ""
+
+#: extension/prefs.js:140
 msgid "Previous entry (newer)"
 msgstr ""
 
-#: extension/prefs.js:113
+#: extension/prefs.js:141
 msgid "Toggle private mode"
+msgstr ""
+
+#: extension/prefs.js:142
+msgid "Clear history"
 msgstr ""

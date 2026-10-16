@@ -68,6 +68,26 @@ export function rebuildMenu(ext) {
     disconnectMenuSignals(ext);
     ext._menu.removeAll();
 
+    const pairs = [];
+    if (ext._settings.get_boolean('enable-typeahead-search') && ext._history.entries.length > 0) {
+        const searchItem = new PopupMenu.PopupBaseMenuItem({reactive: false});
+        const search = new St.Entry({hint_text: _('Type to search'), x_expand: true, can_focus: true});
+        trackSignal(ext, search, search.connect('notify::text', () => {
+            const q = search.text.trim().toLowerCase();
+            for (const pair of pairs) {
+                pair.item.visible = q.length === 0 ||
+                    (pair.entry.text ?? (pair.entry.kind === 'image' ? _('Image') : ''))
+                        .toLowerCase().includes(q);
+            }
+        }));
+        searchItem.add_child(search);
+        ext._menu.addMenuItem(searchItem);
+        trackSignal(ext, ext._menu, ext._menu.connect('open-state-changed', (_m, open) => {
+            if (open)
+                search.grab_key_focus();
+        }));
+    }
+
     if (ext._history.entries.length === 0) {
         const empty = new PopupMenu.PopupMenuItem(_('Clipboard history is empty'), {reactive: false});
         ext._menu.addMenuItem(empty);
@@ -80,8 +100,11 @@ export function rebuildMenu(ext) {
             style: 'max-height: 480px;',
         });
         const section = new PopupMenu.PopupMenuSection();
-        for (const entry of ext._history.entries)
-            section.addMenuItem(makeEntryItem(ext, entry));
+        for (const entry of ext._history.entries) {
+            const item = makeEntryItem(ext, entry);
+            pairs.push({item, entry});
+            section.addMenuItem(item);
+        }
         scroll.add_child(section.actor);
         const scrollSection = new PopupMenu.PopupMenuSection();
         scrollSection.actor.add_child(scroll);

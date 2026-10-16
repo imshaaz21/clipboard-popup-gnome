@@ -57,6 +57,31 @@
             <summary>Previous entry shortcut</summary>
             <description>Cycle the clipboard back to the previous newer history entry. Empty disables it.</description>
         </key>
+        <key name="clear-history" type="as">
+            <default><![CDATA[[]]]></default>
+            <summary>Clear history shortcut</summary>
+            <description>Keyboard shortcut that wipes unpinned history entries. Empty disables it.</description>
+        </key>
+        <key name="enable-keybindings" type="b">
+            <default>true</default>
+            <summary>Enable keybindings</summary>
+            <description>Master switch for all extension keyboard shortcuts.</description>
+        </key>
+        <key name="enable-typeahead-search" type="b">
+            <default>true</default>
+            <summary>Typeahead search</summary>
+            <description>Show a search row at the top of the popup that filters history as you type.</description>
+        </key>
+        <key name="process-primary-selection" type="b">
+            <default>false</default>
+            <summary>Track primary selection</summary>
+            <description>Also record the PRIMARY selection (text selected with the mouse) into history.</description>
+        </key>
+        <key name="ignore-password-mimes" type="b">
+            <default>true</default>
+            <summary>Ignore password-manager contents</summary>
+            <description>Skip clipboard contents flagged by password managers.</description>
+        </key>
         <key name="toggle-private-mode" type="as">
             <default><![CDATA[[]]]></default>
             <summary>Private mode shortcut</summary>

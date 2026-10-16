@@ -63,11 +63,12 @@ export default class ClipboardPopupExtension extends Extension {
             'next-entry': () => cycleEntry(this, 1),
             'prev-entry': () => cycleEntry(this, -1),
             'toggle-private-mode': () => togglePrivateMode(this),
+            'clear-history': () => { this._history.clear(); showOsd('edit-delete-symbolic', _('History cleared')); },
         };
         this._keybindings = Object.keys(this._handlers);
-        for (const key of this._keybindings)
-            Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE,
-                Shell.ActionMode.NORMAL, this._handlers[key]);
+        this._bindKeybindings();
+        this._keybindSignalId = this._settings.connect('changed::enable-keybindings',
+            () => this._bindKeybindings());
     }
 
     disable() {
@@ -75,6 +76,9 @@ export default class ClipboardPopupExtension extends Extension {
             Main.wm.removeKeybinding(key);
         this._keybindings = null;
         this._handlers = null;
+        if (this._keybindSignalId)
+            this._settings?.disconnect(this._keybindSignalId);
+        this._keybindSignalId = 0;
         if (this._onlyPinnedSignalId)
             this._settings?.disconnect(this._onlyPinnedSignalId);
         this._onlyPinnedSignalId = 0;
@@ -136,14 +140,18 @@ export default class ClipboardPopupExtension extends Extension {
     }
 
     _onSelectionChanged(selType) {
-        if (selType !== Meta.SelectionType.SELECTION_CLIPBOARD || this._suppressCapture ||
-            this._settings.get_boolean('private-mode'))
+        const clip = selType === Meta.SelectionType.SELECTION_CLIPBOARD;
+        const primary = selType === Meta.SelectionType.SELECTION_PRIMARY;
+        if ((!clip && !(primary && this._settings.get_boolean('process-primary-selection'))) ||
+            this._suppressCapture || this._settings.get_boolean('private-mode'))
             return;
         const clipboard = St.Clipboard.get_default();
         // Skip secrets flagged by password managers.
-        if ((clipboard.get_mimetypes(CLIP) ?? []).includes('x-kde-passwordManagerHint'))
+        if (clip && this._settings.get_boolean('ignore-password-mimes') &&
+            (clipboard.get_mimetypes(CLIP) ?? []).includes('x-kde-passwordManagerHint'))
             return;
-        clipboard.get_text(CLIP, (_cb, text) => {
+        const target = clip ? CLIP : St.ClipboardType.PRIMARY;
+        clipboard.get_text(target, (_cb, text) => {
             if (!this._history)
                 return;
             if (this._settings.get_boolean('strip-text') && text)
@@ -158,6 +166,8 @@ export default class ClipboardPopupExtension extends Extension {
                 }
                 return;
             }
+            if (!clip)
+                return;
             clipboard.get_content(CLIP, 'image/png', (_cb2, bytes) => {
                 if (bytes && this._history) {
                     if (this._history.addImage(bytes)) {
@@ -174,6 +184,16 @@ export default class ClipboardPopupExtension extends Extension {
     _trimHistory() {
         this._history.trim(this._settings.get_int('history-size'),
             this._settings.get_int('cache-size') << 20);
+    }
+
+    _bindKeybindings() {
+        for (const key of this._keybindings ?? [])
+            Main.wm.removeKeybinding(key);
+        if (!this._settings?.get_boolean('enable-keybindings'))
+            return;
+        for (const key of this._keybindings)
+            Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE,
+                Shell.ActionMode.NORMAL, this._handlers[key]);
     }
 
     _openPopup() {

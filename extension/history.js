@@ -33,7 +33,6 @@ export class History {
                         this._nextId = e.id + 1;
                 }
             } catch (e) {
-                // No saved history yet.
             }
         });
     }
@@ -57,7 +56,6 @@ export class History {
         }
     }
 
-    // Returns the entry added, or null if skipped (duplicate of most recent).
     addText(text) {
         if (!text || !text.trim())
             return null;
@@ -69,9 +67,7 @@ export class History {
         return entry;
     }
 
-    // bytes: GLib.Bytes of PNG data. Writes it to the images dir.
     addImage(bytes) {
-        // Dedup across the whole history, not just the newest entry.
         const hash = GLib.compute_checksum_for_bytes(GLib.ChecksumType.SHA256, bytes);
         if (this.entries.some(e => e.kind === 'image' && e.imgHash === hash))
             return null;
@@ -89,9 +85,9 @@ export class History {
                     }
                 });
             const entry = {id: this._nextId++, kind: 'image', imageFile: path, imgHash: hash, pinned: false, timestamp: Date.now()};
-            entry._bytes = bytes; // kept in memory so selecting it needs no disk read
+            entry._bytes = bytes;
             for (const e of this.entries)
-                delete e._bytes; // only the newest image stays in memory
+                delete e._bytes; // only the newest image keeps its bytes in memory
             this.entries.unshift(entry);
             this.save();
             return entry;
@@ -148,7 +144,6 @@ export class History {
         this.save();
     }
 
-    // Drop oldest unpinned entries beyond the limit.
     trim(maxSize) {
         let unpinnedCount = this.entries.filter(e => !e.pinned).length;
         const before = this.entries.length;

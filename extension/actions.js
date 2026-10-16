@@ -10,8 +10,7 @@ import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js'
 const CLIP = St.ClipboardType.CLIPBOARD;
 const PASTE_DELAY_MS = 60;
 
-// Evdev keycodes for Shift+Insert: a paste accelerator accepted by terminals,
-// GTK apps, browsers and Qt apps alike, so no per-app detection is needed.
+// Evdev keycodes for Shift+Insert - the paste accelerator every app accepts, terminals included.
 const KEY_SHIFT_L = 42;
 const KEY_INSERT = 110;
 

@@ -17,7 +17,6 @@ function disconnectMenuSignals(ext) {
         try {
             actor.disconnect(id);
         } catch (e) {
-            // actor already destroyed
         }
     }
     ext._menuSignals = null;

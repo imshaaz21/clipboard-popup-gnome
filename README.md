@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" width="128" alt="Clipboard Popup logo"/></p>
+
 # Clipboard Popup for GNOME: Win+V clipboard history
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)

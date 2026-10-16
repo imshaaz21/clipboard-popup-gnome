@@ -71,49 +71,51 @@ export default class ClipboardPopupExtension extends Extension {
     }
 
     disable() {
-        for (const key of this._keybindings)
+        for (const key of this._keybindings ?? [])
             Main.wm.removeKeybinding(key);
         this._keybindings = null;
         this._handlers = null;
         if (this._onlyPinnedSignalId)
-            this._settings.disconnect(this._onlyPinnedSignalId);
+            this._settings?.disconnect(this._onlyPinnedSignalId);
         this._onlyPinnedSignalId = 0;
         if (this._selectionSignalId)
-            this._selection.disconnect(this._selectionSignalId);
+            this._selection?.disconnect(this._selectionSignalId);
         this._selectionSignalId = 0;
         this._selection = null;
         if (this._trimSignalId)
-            this._settings.disconnect(this._trimSignalId);
+            this._settings?.disconnect(this._trimSignalId);
         this._trimSignalId = 0;
-        for (const id of this._timeoutIds)
+        for (const id of this._timeoutIds ?? [])
             GLib.Source.remove(id);
-        this._timeoutIds.clear();
+        this._timeoutIds?.clear();
         this._timeoutIds = null;
         if (this._menuSignalId)
-            this._menu.disconnect(this._menuSignalId);
+            this._menu?.disconnect(this._menuSignalId);
         this._menuSignalId = 0;
         if (this._privateSignalId)
-            this._settings.disconnect(this._privateSignalId);
+            this._settings?.disconnect(this._privateSignalId);
         this._privateSignalId = 0;
         if (this._indicatorSignalId)
-            this._indicator.disconnect(this._indicatorSignalId);
+            this._indicator?.disconnect(this._indicatorSignalId);
         this._indicatorSignalId = 0;
-        this._indicatorIcon.destroy();
+        this._indicatorIcon?.destroy();
         this._indicatorIcon = null;
-        this._indicator.destroy();
+        this._indicator?.destroy();
         this._indicator = null;
         releaseMenu(this);
-        this._menu.destroy();
+        this._menu?.destroy();
         this._menu = null;
-        this._anchor.destroy();
+        this._anchor?.destroy();
         this._anchor = null;
-        this._history.finalize();
+        this._history?.finalize();
         this._history = null;
         this._device = null;
         this._settings = null;
     }
 
     _later(ms, fn) {
+        if (!this._timeoutIds)
+            return;
         const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
             this._timeoutIds.delete(id);
             fn();

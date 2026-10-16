@@ -39,6 +39,8 @@ export function setClipboardEntry(entry, clipboard) {
 }
 
 export function cycleEntry(ext, dir) {
+    if (!ext._history || !ext._settings)
+        return;
     const entries = ext._history.entries;
     if (entries.length === 0)
         return;
@@ -54,6 +56,8 @@ export function cycleEntry(ext, dir) {
 }
 
 export function togglePrivateMode(ext) {
+    if (!ext._settings)
+        return;
     const on = !ext._settings.get_boolean('private-mode');
     ext._settings.set_boolean('private-mode', on);
     showOsd('changes-prevent-symbolic', on ? _('Private mode on') : _('Private mode off'));
@@ -70,7 +74,8 @@ export function panelIcon(ext) {
 }
 
 export function syncPrivateIcon(ext) {
-    ext._indicatorIcon.gicon = panelIcon(ext);
+    if (ext._indicatorIcon && ext._settings)
+        ext._indicatorIcon.gicon = panelIcon(ext);
 }
 
 export function sendPaste(ext) {

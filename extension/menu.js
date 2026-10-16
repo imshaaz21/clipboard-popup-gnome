@@ -63,6 +63,8 @@ function makeEntryItem(ext, entry) {
 }
 
 export function rebuildMenu(ext) {
+    if (!ext._menu || !ext._history || !ext._settings)
+        return;
     disconnectMenuSignals(ext);
     ext._menu.removeAll();
 

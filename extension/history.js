@@ -3,6 +3,9 @@ import Gio from 'gi://Gio';
 
 const HISTORY_FILE = 'history.json';
 const IMAGES_DIR = 'images';
+// A single entry above these sizes is never stored: big pastes would bloat RAM and history.json.
+const MAX_TEXT_BYTES = 1 << 20;
+const MAX_IMAGE_BYTES = 8 << 20;
 
 // One entry in the clipboard history.
 // {id, kind: 'text'|'image', text?, imageFile?, pinned, timestamp}
@@ -57,17 +60,19 @@ export class History {
     }
 
     addText(text) {
-        if (!text || !text.trim())
+        if (!text || !text.trim() || new TextEncoder().encode(text).length > MAX_TEXT_BYTES)
             return null;
         if (this.entries[0]?.kind === 'text' && this.entries[0].text === text)
             return null;
-        const entry = {id: this._nextId++, kind: 'text', text, pinned: false, timestamp: Date.now()};
+        const entry = {id: this._nextId++, kind: 'text', text, size: new TextEncoder().encode(text).length, pinned: false, timestamp: Date.now()};
         this.entries.unshift(entry);
         this.save();
         return entry;
     }
 
     addImage(bytes) {
+        if (bytes.length > MAX_IMAGE_BYTES)
+            return null;
         const hash = GLib.compute_checksum_for_bytes(GLib.ChecksumType.SHA256, bytes);
         if (this.entries.some(e => e.kind === 'image' && e.imgHash === hash))
             return null;
@@ -84,7 +89,7 @@ export class History {
                         console.error(`clipboard-popup: image write failed: ${e.message}`);
                     }
                 });
-            const entry = {id: this._nextId++, kind: 'image', imageFile: path, imgHash: hash, pinned: false, timestamp: Date.now()};
+            const entry = {id: this._nextId++, kind: 'image', imageFile: path, imgHash: hash, size: bytes.length, pinned: false, timestamp: Date.now()};
             entry._bytes = bytes;
             for (const e of this.entries)
                 delete e._bytes; // only the newest image keeps its bytes in memory
@@ -144,17 +149,25 @@ export class History {
         this.save();
     }
 
-    trim(maxSize) {
-        let unpinnedCount = this.entries.filter(e => !e.pinned).length;
+    trim(maxSize, maxBytes) {
+        const overLimit = () => {
+            let count = 0, total = 0;
+            for (const e of this.entries) {
+                if (e.pinned)
+                    continue;
+                count++;
+                total += e.size ?? 0;
+            }
+            return count > maxSize || total > maxBytes;
+        };
         const before = this.entries.length;
-        for (let i = this.entries.length - 1; i >= 0 && unpinnedCount > maxSize; i--) {
+        for (let i = this.entries.length - 1; i >= 0 && overLimit(); i--) {
             const e = this.entries[i];
             if (e.pinned)
                 continue;
             if (e.kind === 'image')
                 try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
             this.entries.splice(i, 1);
-            unpinnedCount--;
         }
         if (this.entries.length !== before)
             this.save();

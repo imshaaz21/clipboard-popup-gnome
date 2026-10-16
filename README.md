@@ -55,9 +55,10 @@ gnome-extensions enable clipboard-popup@imshaaz21.github.com
 Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.github.com`:
 
 - **History size** - maximum unpinned entries kept (5-200, default 25)
+- **Cache size** - total disk budget in MB for persisted history (default 10); oversized copies (text >1MB, image >8MB) are never stored
 - **Text preview length** - characters shown per text entry
 - **Paste on select** - simulate a paste keypress after picking an entry
-- **Private mode** - pause recording; also togglable from the popup itself
+- **Private mode** - pause recording; right-click the panel icon, or bind a key
 - **Notify on copy** - show an OSD when new content is recorded
 - **Confirm clear** - require a second click before wiping history (default on)
 - **Strip text** - trim whitespace from copied text

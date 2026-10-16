@@ -21,6 +21,14 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         settings.bind('history-size', sizeRow, 'value', Gio.SettingsBindFlags.DEFAULT);
         group.add(sizeRow);
 
+        const cacheSizeRow = new Adw.SpinRow({
+            title: _('Cache size (MB)'),
+            subtitle: _('Maximum total size of persisted history'),
+            adjustment: new Gtk.Adjustment({lower: 1, upper: 100, step_increment: 1}),
+        });
+        settings.bind('cache-size', cacheSizeRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        group.add(cacheSizeRow);
+
         const previewRow = new Adw.SpinRow({
             title: _('Text preview length'),
             subtitle: _('Characters shown per text entry'),

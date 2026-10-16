@@ -52,7 +52,7 @@ export default class ClipboardPopupExtension extends Extension {
 
         this._selectionSignalId = this._connectSelectionSignal();
         this._trimSignalId = this._settings.connect('changed::history-size',
-            () => this._history.trim(this._settings.get_int('history-size')));
+            () => this._trimHistory());
         this._onlyPinnedSignalId = this._settings.connect('changed::cache-only-favorites',
             () => (this._history.onlyPinned = this._settings.get_boolean('cache-only-favorites')));
         this._history.onlyPinned = this._settings.get_boolean('cache-only-favorites');
@@ -152,7 +152,7 @@ export default class ClipboardPopupExtension extends Extension {
                 const entry = this._history.addText(text);
                 if (entry) {
                     this._cycleIndex = null;
-                    this._history.trim(this._settings.get_int('history-size'));
+                    this._trimHistory();
                     if (this._settings.get_boolean('notify-on-copy'))
                         showOsd('edit-copy-symbolic', _('Copied to history'));
                 }
@@ -162,13 +162,18 @@ export default class ClipboardPopupExtension extends Extension {
                 if (bytes && this._history) {
                     if (this._history.addImage(bytes)) {
                         this._cycleIndex = null;
-                        this._history.trim(this._settings.get_int('history-size'));
+                        this._trimHistory();
                         if (this._settings.get_boolean('notify-on-copy'))
                             showOsd('image-x-generic-symbolic', _('Image copied to history'));
                     }
                 }
             });
         });
+    }
+
+    _trimHistory() {
+        this._history.trim(this._settings.get_int('history-size'),
+            this._settings.get_int('cache-size') << 20);
     }
 
     _openPopup() {

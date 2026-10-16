@@ -91,7 +91,7 @@ export default class ClipboardPopupExtension extends Extension {
             return;
         const clipboard = St.Clipboard.get_default();
         // Skip secrets flagged by password managers.
-        if (clipboard.get_mimetypes(CLIP).includes('x-kde-passwordManagerHint'))
+        if ((clipboard.get_mimetypes(CLIP) ?? []).includes('x-kde-passwordManagerHint'))
             return;
         clipboard.get_text(CLIP, (_cb, text) => {
             if (!this._history)

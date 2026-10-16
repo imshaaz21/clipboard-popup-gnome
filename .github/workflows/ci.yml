@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: sudo apt-get install -y --no-install-recommends libglib2.0-bin
+
+      - name: Validate GSettings schema
+        run: glib-compile-schemas --strict --dry-run extension/schemas
+
+      - name: Check JavaScript syntax
+        run: |
+          for f in extension/*.js; do
+            cp "$f" "/tmp/$(basename "$f" .js).mjs"
+            node --check "/tmp/$(basename "$f" .js).mjs"
+          done
+
+      - name: Run Shexli (extensions.gnome.org review checks)
+        run: |
+          pip install -q shexli
+          (cd extension && zip -qr ../extension.zip . -x 'schemas/gschemas.compiled')
+          shexli extension.zip
+          shexli --format json extension.zip | jq -e '.summary.severity_counts | (.error // 0) == 0 and (.warning // 0) == 0'
+
+      - name: Check metadata
+        run: |
+          jq -e '.uuid and .name and .description and (."shell-version" | length > 0) and ."settings-schema"' extension/metadata.json
+          test ! -e extension/stylesheet.css

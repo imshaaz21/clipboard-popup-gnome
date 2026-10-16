@@ -169,8 +169,20 @@ export default class ClipboardPopupExtension extends Extension {
             const empty = new PopupMenu.PopupMenuItem(_('Clipboard history is empty'), {reactive: false});
             this._menu.addMenuItem(empty);
         } else {
+            const scroll = new St.ScrollView({
+                hscrollbar_policy: St.PolicyType.NEVER,
+                vscrollbar_policy: St.PolicyType.AUTOMATIC,
+                overlay_scrollbars: true,
+                y_expand: false,
+                style: 'max-height: 480px;',
+            });
+            const section = new PopupMenu.PopupMenuSection();
             for (const entry of this._history.entries)
-                this._menu.addMenuItem(this._makeEntryItem(entry));
+                section.addMenuItem(this._makeEntryItem(entry));
+            scroll.add_child(section.actor);
+            const scrollSection = new PopupMenu.PopupMenuSection();
+            scrollSection.actor.add_child(scroll);
+            this._menu.addMenuItem(scrollSection);
         }
 
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());

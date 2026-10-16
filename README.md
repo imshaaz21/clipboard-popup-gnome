@@ -12,11 +12,13 @@ A GNOME Shell extension that brings the Windows **Win+V** clipboard experience t
 
 ## Features
 
-- Popup at the mouse pointer, keyboard navigable (arrow keys + Enter), like a context menu
+- Popup at the mouse pointer, keyboard navigable (arrow keys + Enter), scrollable at 480px max, like a context menu
 - Text **and images** (screenshots, copied PNGs) with image thumbnails
 - **Pin** entries so they never expire and survive Clear history
 - Per-entry delete, and a Clear history action that keeps pinned entries
-- **Paste on select**: the chosen entry is placed on the clipboard and a Ctrl+V is simulated - the PowerToys trick
+- **Paste on select**: the chosen entry is placed on the clipboard and Shift+Insert is simulated (works in terminals too) - the PowerToys trick
+- **Cycle without opening**: next/prev entry keybindings step through history with an OSD preview
+- **Private mode**: pause recording from the popup, preferences, or a keybinding
 - History survives reboots (stored in `~/.cache/clipboard-popup/`)
 - Configurable history size and text preview length
 - Lightweight: signal-driven, no polling, no subprocesses, all file IO async - zero cost while idle

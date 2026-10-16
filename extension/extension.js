@@ -15,11 +15,10 @@ import {History} from './history.js';
 const CLIP = St.ClipboardType.CLIPBOARD;
 const PASTE_DELAY_MS = 60;
 
-// Terminals paste with Ctrl+Shift+V, not Ctrl+V.
-const TERMINAL_WM_CLASSES = [
-    'gnome-terminal-server', 'kgx', 'alacritty', 'kitty', 'foot',
-    'tilix', 'wezterm-gui', 'xterm', 'terminator', 'guake',
-];
+// Evdev keycodes for Shift+Insert: a paste accelerator accepted by terminals,
+// GTK apps, browsers and Qt apps alike, so no per-app detection is needed.
+const KEY_SHIFT_L = 42;
+const KEY_INSERT = 110;
 
 export default class ClipboardPopupExtension extends Extension {
     enable() {
@@ -109,7 +108,8 @@ export default class ClipboardPopupExtension extends Extension {
     }
 
     _onSelectionChanged(selType) {
-        if (selType !== Meta.SelectionType.SELECTION_CLIPBOARD || this._suppressCapture)
+        if (selType !== Meta.SelectionType.SELECTION_CLIPBOARD || this._suppressCapture ||
+            this._settings.get_boolean('private-mode'))
             return;
         const clipboard = St.Clipboard.get_default();
         // Skip secrets flagged by password managers.
@@ -153,6 +153,11 @@ export default class ClipboardPopupExtension extends Extension {
         }
 
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        const privateItem = new PopupMenu.PopupSwitchMenuItem(_('Private mode (pause recording)'),
+            this._settings.get_boolean('private-mode'));
+        privateItem.connect('toggled', (_i, on) => this._settings.set_boolean('private-mode', on));
+        this._menu.addMenuItem(privateItem);
 
         const clearItem = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
         clearItem.connect('activate', () => this._history.clear());
@@ -234,8 +239,9 @@ export default class ClipboardPopupExtension extends Extension {
             this._later(PASTE_DELAY_MS, () => this._sendPaste());
     }
 
-    // The PowerToys trick: the item is on the clipboard, now simulate Ctrl+V in
-    // whatever window had focus before the popup grabbed it.
+    // The PowerToys trick: the item is on the clipboard, now simulate a paste
+    // keypress in whatever window had focus before the popup grabbed it.
+    // Shift+Insert works in terminals too, unlike Ctrl+V.
     _sendPaste() {
         try {
             // One cached device; creating one per paste leaks.
@@ -244,14 +250,11 @@ export default class ClipboardPopupExtension extends Extension {
                     .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
             }
             const device = this._device;
-            const wmClass = (global.display.focus_window?.get_wm_class() ?? '').toLowerCase();
-            const terminal = TERMINAL_WM_CLASSES.includes(wmClass);
-            const seq = terminal ? [Clutter.KEY_Control_L, Clutter.KEY_Shift_L, Clutter.KEY_v] : [Clutter.KEY_Control_L, Clutter.KEY_v];
-            const t = global.get_current_time();
-            for (const key of seq)
-                device.notify_keyval(t, key, Clutter.KeyState.PRESSED);
-            for (const key of seq.slice().reverse())
-                device.notify_keyval(t, key, Clutter.KeyState.RELEASED);
+            const t = Clutter.get_current_event_time() * 1000;
+            device.notify_key(t, KEY_SHIFT_L, Clutter.KeyState.PRESSED);
+            device.notify_key(t, KEY_INSERT, Clutter.KeyState.PRESSED);
+            device.notify_key(t, KEY_INSERT, Clutter.KeyState.RELEASED);
+            device.notify_key(t, KEY_SHIFT_L, Clutter.KeyState.RELEASED);
         } catch (e) {
             console.error(`clipboard-popup: paste injection failed: ${e.message}`);
         }

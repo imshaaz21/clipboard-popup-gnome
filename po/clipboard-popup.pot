@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 10:42+0530\n"
+"POT-Creation-Date: 2026-10-16 10:47+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,12 +17,16 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension/extension.js:49
-msgid "Clear history (keeps pinned)"
+#: extension/extension.js:148
+msgid "Clipboard history is empty"
 msgstr ""
 
-#: extension/extension.js:160
-msgid "Clipboard history is empty"
+#: extension/extension.js:157
+msgid "Private mode (pause recording)"
+msgstr ""
+
+#: extension/extension.js:162
+msgid "Clear history (keeps pinned)"
 msgstr ""
 
 #: extension/prefs.js:13
@@ -50,9 +54,17 @@ msgid "Paste on select"
 msgstr ""
 
 #: extension/prefs.js:34
-msgid "Simulate Ctrl+V after picking an entry"
+msgid "Simulate a paste keypress after picking an entry"
 msgstr ""
 
 #: extension/prefs.js:40
+msgid "Private mode"
+msgstr ""
+
+#: extension/prefs.js:41
+msgid "Stop recording clipboard contents until turned off"
+msgstr ""
+
+#: extension/prefs.js:47
 msgid "Popup shortcut (e.g. <Super>v, empty disables)"
 msgstr ""

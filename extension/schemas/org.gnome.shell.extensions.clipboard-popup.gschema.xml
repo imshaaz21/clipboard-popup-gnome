@@ -10,7 +10,12 @@
         <key name="paste-on-select" type="b">
             <default>true</default>
             <summary>Paste on select</summary>
-            <description>After picking an entry, simulate Ctrl+V to paste it into the focused window. When off, the entry is only placed on the clipboard.</description>
+            <description>After picking an entry, simulate a paste keypress (Shift+Insert) in the focused window. When off, the entry is only placed on the clipboard.</description>
+        </key>
+        <key name="private-mode" type="b">
+            <default>false</default>
+            <summary>Private mode</summary>
+            <description>When enabled, new clipboard contents are not recorded to history.</description>
         </key>
         <key name="popup-shortcut" type="as">
             <default><![CDATA[['<Super>v']]]></default>

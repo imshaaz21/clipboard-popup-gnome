@@ -54,10 +54,11 @@ Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.gi
 
 - **History size** - maximum unpinned entries kept (5-200, default 25)
 - **Text preview length** - characters shown per text entry
-- **Paste on select** - simulate Ctrl+V after picking an entry
+- **Paste on select** - simulate a paste keypress after picking an entry
+- **Private mode** - pause recording; also togglable from the popup itself
 - **Popup shortcut** - editable in the preferences window, e.g. `<Super>v`; empty disables it (default `<Super>v`)
 
-A panel icon also opens the popup. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Terminals are detected automatically and paste with `Ctrl+Shift+V`.
+A panel icon also opens the popup. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Paste-on-select sends Shift+Insert, which terminals accept too, so it works in every app.
 
 ## Translations
 

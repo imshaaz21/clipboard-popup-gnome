@@ -31,10 +31,17 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
 
         const pasteRow = new Adw.SwitchRow({
             title: _('Paste on select'),
-            subtitle: _('Simulate Ctrl+V after picking an entry'),
+            subtitle: _('Simulate a paste keypress after picking an entry'),
         });
         settings.bind('paste-on-select', pasteRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(pasteRow);
+
+        const privateRow = new Adw.SwitchRow({
+            title: _('Private mode'),
+            subtitle: _('Stop recording clipboard contents until turned off'),
+        });
+        settings.bind('private-mode', privateRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(privateRow);
 
         const shortcutRow = new Adw.EntryRow({
             title: _('Popup shortcut (e.g. <Super>v, empty disables)'),

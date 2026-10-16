@@ -72,8 +72,11 @@ export default class ClipboardPopupExtension extends Extension {
     }
 
     disable() {
-        for (const key of this._keybindings ?? [])
-            Main.wm.removeKeybinding(key);
+        if (this._bound) {
+            for (const key of this._keybindings)
+                Main.wm.removeKeybinding(key);
+        }
+        this._bound = false;
         this._keybindings = null;
         this._handlers = null;
         if (this._keybindSignalId)
@@ -187,10 +190,14 @@ export default class ClipboardPopupExtension extends Extension {
     }
 
     _bindKeybindings() {
-        for (const key of this._keybindings ?? [])
-            Main.wm.removeKeybinding(key);
+        if (this._bound) {
+            for (const key of this._keybindings)
+                Main.wm.removeKeybinding(key);
+        }
+        this._bound = false;
         if (!this._settings?.get_boolean('enable-keybindings'))
             return;
+        this._bound = true;
         for (const key of this._keybindings)
             Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE,
                 Shell.ActionMode.NORMAL, this._handlers[key]);

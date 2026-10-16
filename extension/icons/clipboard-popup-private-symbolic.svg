@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#000">
-  <rect x="2" y="2.5" width="12" height="12" rx="1.5"/>
-  <rect x="4" y="4.5" width="8" height="8" rx="0.8" fill="#fff"/>
-  <rect x="5" y="0.8" width="6" height="2.4" rx="1.1"/>
-  <rect x="6.9" y="1.9" width="2.2" height="0.9" rx="0.45" fill="#fff"/>
-  <rect x="5" y="5.8" width="6" height="1.1" rx="0.55"/>
-  <rect x="5" y="7.9" width="6" height="1.1" rx="0.55"/>
-  <rect x="5" y="10" width="3.4" height="1.1" rx="0.55"/>
-  <!-- slash: recording paused -->
-  <rect x="-7.1" y="7.2" width="14.2" height="1.6" rx="0.8"
-        transform="rotate(-45 8 8)" stroke="#fff" stroke-width="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Outline only, no fills or white cut-outs, so the shell recolors it in light and dark.
+       Outer bounds x 2-14, y 1-15 (1px margin, centered); same in both states. -->
+  <g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5.5 3.5h-1.25A1.5 1.5 0 0 0 2.75 5v8.75a1.5 1.5 0 0 0 1.5 1.5h7.5a1.5 1.5 0 0 0 1.5-1.5V5a1.5 1.5 0 0 0-1.5-1.5H10.5"/>
+    <rect x="5.5" y="1.75" width="5" height="2.75" rx="1"/>
+    <path d="M6.5 7.25v3.75M9.5 7.25v3.75"/>
+  </g>
 </svg>

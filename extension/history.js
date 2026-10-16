@@ -7,6 +7,15 @@ const IMAGES_DIR = 'images';
 const MAX_TEXT_BYTES = 1 << 20;
 const MAX_IMAGE_BYTES = 8 << 20;
 
+function deleteFile(path) {
+    Gio.File.new_for_path(path).delete_async(GLib.PRIORITY_LOW, null, (f, res) => {
+        try {
+            f.delete_finish(res);
+        } catch (e) {
+        }
+    });
+}
+
 // One entry in the clipboard history.
 // {id, kind: 'text'|'image', text?, imageFile?, pinned, timestamp}
 export class History {
@@ -108,7 +117,7 @@ export class History {
         if (this.onlyPinned) {
             for (const e of this.entries) {
                 if (e.kind === 'image' && !e.pinned)
-                    try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
+                    deleteFile(e.imageFile);
             }
         }
         this.save();
@@ -135,7 +144,7 @@ export class History {
         if (!e)
             return;
         if (e.kind === 'image')
-            try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
+            deleteFile(e.imageFile);
         this.entries = this.entries.filter(x => x.id !== id);
         this.save();
     }
@@ -144,7 +153,7 @@ export class History {
         const removed = this.entries.filter(e => !e.pinned);
         for (const e of removed) {
             if (e.kind === 'image')
-                try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
+                deleteFile(e.imageFile);
         }
         this.entries = this.entries.filter(e => e.pinned);
         this.save();
@@ -167,7 +176,7 @@ export class History {
             if (e.pinned)
                 continue;
             if (e.kind === 'image')
-                try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
+                deleteFile(e.imageFile);
             this.entries.splice(i, 1);
         }
         if (this.entries.length !== before)

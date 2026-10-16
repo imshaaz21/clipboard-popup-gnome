@@ -35,3 +35,4 @@ dist/
 # Translations
 extension/locale/
 *.mo
+extension.zip

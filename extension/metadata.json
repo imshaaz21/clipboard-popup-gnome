@@ -1,0 +1,17 @@
+{
+  "name": "Clipboard Popup",
+  "description": "PowerToys Win+V equivalent for GNOME. A clipboard history popup that opens at the mouse pointer. Supports text and images, pinning, clearing, and paste-on-select. Clipboard access: it reads clipboard contents to build history and writes the entry the user selects.",
+  "uuid": "clipboard-popup@imshaaz21.github.com",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ],
+  "url": "https://github.com/imshaaz21/clipboard-popup-gnome",
+  "version": 1,
+  "version-name": "0.1.0",
+  "settings-schema": "org.gnome.shell.extensions.clipboard-popup"
+}

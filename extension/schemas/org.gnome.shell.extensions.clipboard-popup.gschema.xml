@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+    <schema id="org.gnome.shell.extensions.clipboard-popup" path="/org/gnome/shell/extensions/clipboard-popup/">
+        <key name="history-size" type="i">
+            <default>25</default>
+            <range min="5" max="200"/>
+            <summary>History size</summary>
+            <description>Maximum number of unpinned entries kept in clipboard history.</description>
+        </key>
+        <key name="paste-on-select" type="b">
+            <default>true</default>
+            <summary>Paste on select</summary>
+            <description>After picking an entry, simulate Ctrl+V to paste it into the focused window. When off, the entry is only placed on the clipboard.</description>
+        </key>
+        <key name="popup-shortcut" type="as">
+            <default><![CDATA[['<Super>v']]]></default>
+            <summary>Popup shortcut</summary>
+            <description>Keyboard shortcut that opens the clipboard popup at the pointer. Empty disables it.</description>
+        </key>
+        <key name="preview-length" type="i">
+            <default>80</default>
+            <range min="20" max="300"/>
+            <summary>Text preview length</summary>
+            <description>Maximum characters shown per text entry in the popup.</description>
+        </key>
+    </schema>
+</schemalist>

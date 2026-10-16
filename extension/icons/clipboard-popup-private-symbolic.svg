@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
   <!-- Outline only, no fills or white cut-outs, so the shell recolors it in light and dark.
-       Outer bounds x 2-14, y 1-15 (1px margin, centered); same in both states. -->
-  <g fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M5.5 3.5h-1.25A1.5 1.5 0 0 0 2.75 5v8.75a1.5 1.5 0 0 0 1.5 1.5h7.5a1.5 1.5 0 0 0 1.5-1.5V5a1.5 1.5 0 0 0-1.5-1.5H10.5"/>
-    <rect x="5.5" y="1.75" width="5" height="2.75" rx="1"/>
-    <path d="M6.5 7.25v3.75M9.5 7.25v3.75"/>
+       Pixel-snapped: outer bounds x 2-14, y 1-15 (centered, 1px margin), same in both states. -->
+  <g fill="none" stroke="#000" stroke-linejoin="round">
+    <path stroke-width="2" d="M5 4H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-1"/>
+    <rect fill="#000" stroke="none" x="5.5" y="1" width="5" height="3" rx="1"/>
+    <path stroke-width="2" d="M6 7.5v4M10 7.5v4"/>
   </g>
 </svg>

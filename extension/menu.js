@@ -101,7 +101,8 @@ export function rebuildMenu(ext) {
             style: 'max-height: 480px;',
         });
         const section = new PopupMenu.PopupMenuSection();
-        for (const entry of ext._history.entries) {
+        const maxShown = ext._settings.get_int('max-displayed-entries');
+        for (const entry of ext._history.entries.slice(0, maxShown)) {
             const item = makeEntryItem(ext, entry);
             pairs.push({item, entry});
             section.addMenuItem(item);

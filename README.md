@@ -55,6 +55,7 @@ gnome-extensions enable clipboard-popup@imshaaz21.github.com
 Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.github.com`:
 
 - **History size** - maximum unpinned entries kept (5-200, default 25)
+- **Maximum displayed entries** - how many entries render in the popup (10-200, default 50); the rest scroll-free history stays searchable via cycling
 - **Cache size** - total disk budget in MB for persisted history (default 10); oversized copies (text >1MB, image >8MB) are never stored
 - **Text preview length** - characters shown per text entry
 - **Paste on select** - simulate a paste keypress after picking an entry

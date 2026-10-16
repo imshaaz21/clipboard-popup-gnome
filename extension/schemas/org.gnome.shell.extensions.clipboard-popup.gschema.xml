@@ -93,6 +93,12 @@
             <summary>Cache size (MB)</summary>
             <description>Maximum total size of persisted clipboard history. Oldest unpinned entries are evicted when exceeded.</description>
         </key>
+        <key name="max-displayed-entries" type="i">
+            <default>50</default>
+            <range min="10" max="200"/>
+            <summary>Maximum displayed entries</summary>
+            <description>Maximum number of history entries rendered in the popup; older entries stay in history but are not shown.</description>
+        </key>
         <key name="preview-length" type="i">
             <default>80</default>
             <range min="20" max="300"/>

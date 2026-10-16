@@ -19,7 +19,7 @@ A GNOME Shell extension that brings the Windows **Win+V** clipboard manager expe
 - **Pin** and delete entries from the panel icon menu (left-click), keeping the popup itself clean like Win+V
 - **Paste on select**: the chosen entry is placed on the clipboard and Shift+Insert is simulated (works in terminals too) - the PowerToys trick
 - **Cycle without opening**: next/prev entry keybindings step through history with an OSD preview
-- **Private mode**: right-click the panel icon (or use a keybinding/preference) to pause recording - the icon switches to a pause glyph while it is on
+- **Private mode**: right-click the panel icon (or use a keybinding/preference) to pause recording - the icon switches to the private glyph while it is on
 - History survives reboots (stored in `~/.cache/clipboard-popup/`)
 - Configurable history size and text preview length
 - Lightweight: signal-driven, no polling, no subprocesses, all file IO async - zero cost while idle

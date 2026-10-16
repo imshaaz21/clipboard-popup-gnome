@@ -11,7 +11,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {History} from './history.js';
 import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste, syncPrivateIcon} from './actions.js';
-import {rebuildMenu, releaseMenu} from './menu.js';
+import {rebuildMenu, rebuildPanelMenu, releaseMenu} from './menu.js';
 
 const CLIP = St.ClipboardType.CLIPBOARD;
 const PASTE_DELAY_MS = 60;
@@ -37,8 +37,11 @@ export default class ClipboardPopupExtension extends Extension {
                 togglePrivateMode(this);
                 return Clutter.EVENT_STOP;
             }
-            this._openPopup();
-            return Clutter.EVENT_STOP;
+            return Clutter.EVENT_PROPAGATE;
+        });
+        this._panelMenuSignalId = this._indicator.menu.connect('open-state-changed', (_m, open) => {
+            if (open)
+                rebuildPanelMenu(this);
         });
         Main.panel.addToStatusArea(this.uuid, this._indicator);
         this._privateSignalId = this._settings.connect('changed::private-mode',
@@ -102,6 +105,9 @@ export default class ClipboardPopupExtension extends Extension {
         if (this._privateSignalId)
             this._settings?.disconnect(this._privateSignalId);
         this._privateSignalId = 0;
+        if (this._panelMenuSignalId)
+            this._indicator?.menu?.disconnect(this._panelMenuSignalId);
+        this._panelMenuSignalId = 0;
         if (this._indicatorSignalId)
             this._indicator?.disconnect(this._indicatorSignalId);
         this._indicatorSignalId = 0;
@@ -205,7 +211,16 @@ export default class ClipboardPopupExtension extends Extension {
 
     _openPopup() {
         const [x, y] = global.get_pointer();
-        this._anchor.set_position(Math.max(0, x), Math.max(0, y));
+        let px = x, py = y;
+        const focus = global.display.focus_window;
+        if (focus) {
+            const r = focus.get_frame_rect();
+            if (x < r.x || x > r.x + r.width || y < r.y || y > r.y + r.height) {
+                px = r.x + Math.round(r.width / 2);
+                py = r.y + Math.round(r.height / 4);
+            }
+        }
+        this._anchor.set_position(Math.max(0, px), Math.max(0, py));
         rebuildMenu(this);
         this._menu.open();
     }

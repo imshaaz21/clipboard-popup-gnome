@@ -14,10 +14,9 @@ A GNOME Shell extension that brings the Windows **Win+V** clipboard manager expe
 
 ## Features
 
-- Popup at the mouse pointer, keyboard navigable (arrow keys + Enter), scrollable at 480px max, like a context menu
+- Searchable popup opened where your focus is - at the mouse pointer when it is over the focused window, otherwise centered on the focused window. Keyboard navigable (arrow keys + Enter), scrollable at 480px max
 - Text **and images** (screenshots, copied PNGs) with image thumbnails
-- **Pin** entries so they never expire and survive Clear history
-- Per-entry delete, and a Clear history action that keeps pinned entries
+- **Pin** and delete entries from the panel icon menu (left-click), keeping the popup itself clean like Win+V
 - **Paste on select**: the chosen entry is placed on the clipboard and Shift+Insert is simulated (works in terminals too) - the PowerToys trick
 - **Cycle without opening**: next/prev entry keybindings step through history with an OSD preview
 - **Private mode**: right-click the panel icon (or use a keybinding/preference) to pause recording - the icon switches to a pause glyph while it is on
@@ -73,7 +72,7 @@ Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.gi
 - **Cache only favorites** - only pinned entries survive a restart
 - **Shortcuts** - editable in preferences; popup (`<Super>v`), next/prev entry cycling, private-mode toggle, clear history; empty disables
 
-The panel icon opens the popup on left-click; right-click toggles private mode. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Paste-on-select sends Shift+Insert, which terminals accept too, so it works in every app.
+The panel icon's menu (left-click) manages entries - pin, delete, private mode, clear history; right-click toggles private mode directly. The pointer popup stays search-and-paste only. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Paste-on-select sends Shift+Insert, which terminals accept too, so it works in every app.
 
 ## FAQ
 

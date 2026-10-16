@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 11:16+0530\n"
+"POT-Creation-Date: 2026-10-16 11:21+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension/actions.js:53 extension/menu.js:80
+#: extension/actions.js:53 extension/menu.js:81
 msgid "Image"
 msgstr ""
 
@@ -29,32 +29,36 @@ msgstr ""
 msgid "Private mode off"
 msgstr ""
 
-#: extension/extension.js:66
+#: extension/extension.js:69
 msgid "History cleared"
 msgstr ""
 
-#: extension/extension.js:168
+#: extension/extension.js:174
 msgid "Copied to history"
 msgstr ""
 
-#: extension/extension.js:180
+#: extension/extension.js:186
 msgid "Image copied to history"
 msgstr ""
 
-#: extension/menu.js:75
+#: extension/menu.js:76
 msgid "Type to search"
 msgstr ""
 
-#: extension/menu.js:93
+#: extension/menu.js:94
 msgid "Clipboard history is empty"
 msgstr ""
 
-#: extension/menu.js:118
-msgid "Clear history (keeps pinned)"
+#: extension/menu.js:129
+msgid "Open clipboard popup"
 msgstr ""
 
-#: extension/menu.js:123
-msgid "Really clear? Click again"
+#: extension/menu.js:133 extension/prefs.js:56
+msgid "Private mode"
+msgstr ""
+
+#: extension/menu.js:145
+msgid "Clear history (keeps pinned)"
 msgstr ""
 
 #: extension/prefs.js:13
@@ -99,10 +103,6 @@ msgstr ""
 
 #: extension/prefs.js:50
 msgid "Simulate a paste keypress after picking an entry"
-msgstr ""
-
-#: extension/prefs.js:56
-msgid "Private mode"
 msgstr ""
 
 #: extension/prefs.js:57

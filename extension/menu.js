@@ -24,14 +24,12 @@ function disconnectMenuSignals(ext) {
 }
 
 function iconButton(ext, iconName, onClick) {
-    const btn = new St.Button({
-        child: new St.Icon({icon_name: iconName, icon_size: 14}),
-    });
+    const btn = new St.Button({child: new St.Icon({icon_name: iconName, icon_size: 14})});
     trackSignal(ext, btn, btn.connect('clicked', onClick));
     return btn;
 }
 
-function makeEntryItem(ext, entry) {
+function makeEntryItem(ext, entry, controls = false) {
     const item = new PopupMenu.PopupBaseMenuItem();
 
     if (entry.kind === 'image') {
@@ -42,22 +40,25 @@ function makeEntryItem(ext, entry) {
     } else {
         const preview = entry.text.replace(/\s+/g, ' ');
         const max = ext._settings.get_int('preview-length');
+        const shown = preview.length > max ? `${preview.slice(0, max - 1)}…` : preview;
         item.add_child(new St.Label({
-            text: preview.length > max ? `${preview.slice(0, max - 1)}…` : preview,
+            text: entry.pinned && !controls ? `★ ${shown}` : shown,
             x_expand: true,
         }));
     }
 
-    item.add_child(iconButton(ext, entry.pinned ? 'starred-symbolic' : 'non-starred-symbolic',
-        () => {
-            ext._history.togglePin(entry.id);
-            rebuildMenu(ext);
-        }));
-    item.add_child(iconButton(ext, 'window-close-symbolic',
-        () => {
-            ext._history.remove(entry.id);
-            rebuildMenu(ext);
-        }));
+    if (controls) {
+        item.add_child(iconButton(ext, entry.pinned ? 'starred-symbolic' : 'non-starred-symbolic',
+            () => {
+                ext._history.togglePin(entry.id);
+                rebuildPanelMenu(ext);
+            }));
+        item.add_child(iconButton(ext, 'window-close-symbolic',
+            () => {
+                ext._history.remove(entry.id);
+                rebuildPanelMenu(ext);
+            }));
+    }
 
     trackSignal(ext, item, item.connect('activate', () => ext._selectEntry(entry)));
     return item;
@@ -112,24 +113,39 @@ export function rebuildMenu(ext) {
         scrollSection.actor.add_child(scroll);
         ext._menu.addMenuItem(scrollSection);
     }
-
-    ext._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-    const clearItem = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
-    let armed = false;
-    trackSignal(ext, clearItem, clearItem.connect('activate', () => {
-        if (ext._settings.get_boolean('confirm-clear') && !armed) {
-            armed = true;
-            clearItem.label.set_text(_('Really clear? Click again'));
-            return;
-        }
-        ext._history.clear();
-        armed = false;
-        rebuildMenu(ext);
-    }));
-    ext._menu.addMenuItem(clearItem);
 }
 
 export function releaseMenu(ext) {
     disconnectMenuSignals(ext);
+}
+
+export function rebuildPanelMenu(ext) {
+    const menu = ext._indicator?.menu;
+    if (!menu || !ext._history || !ext._settings)
+        return;
+    disconnectMenuSignals(ext);
+    menu.removeAll();
+
+    const openItem = new PopupMenu.PopupMenuItem(_('Open clipboard popup'));
+    trackSignal(ext, openItem, openItem.connect('activate', () => ext._openPopup()));
+    menu.addMenuItem(openItem);
+
+    const privateItem = new PopupMenu.PopupSwitchMenuItem(_('Private mode'), ext._settings.get_boolean('private-mode'));
+    trackSignal(ext, privateItem, privateItem.connect('toggled',
+        () => ext._settings.set_boolean('private-mode', privateItem.state)));
+    menu.addMenuItem(privateItem);
+
+    menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    const section = new PopupMenu.PopupMenuSection();
+    for (const entry of ext._history.entries)
+        section.addMenuItem(makeEntryItem(ext, entry, true));
+    menu.addMenuItem(section);
+
+    menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    const clearItem = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
+    trackSignal(ext, clearItem, clearItem.connect('activate', () => {
+        ext._history.clear();
+        rebuildPanelMenu(ext);
+    }));
+    menu.addMenuItem(clearItem);
 }

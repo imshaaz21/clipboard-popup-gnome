@@ -1,3 +1,4 @@
+import Atspi from 'gi://Atspi';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -71,6 +72,34 @@ export function panelIcon(ext) {
 export function syncPrivateIcon(ext) {
     if (ext._indicatorIcon && ext._settings)
         ext._indicatorIcon.gicon = panelIcon(ext);
+}
+
+export function trackCaret(ext) {
+    try {
+        ext._caretListener = Atspi.EventListener.new();
+        ext._caretHandler = event => {
+            try {
+                ext._caretPos = event.source.get_character_extents(
+                    event.detail1, Atspi.CoordType.SCREEN);
+            } catch (e) {
+                ext._caretPos = null;
+            }
+        };
+        ext._caretListener.register_from_callback(ext._caretHandler, 'object:text-caret-moved');
+    } catch (e) {
+        ext._caretListener = null;
+    }
+}
+
+export function untrackCaret(ext) {
+    if (ext._caretListener && ext._caretHandler) {
+        try {
+            ext._caretListener.deregister_from_callback(ext._caretHandler, 'object:text-caret-moved');
+        } catch (e) {
+        }
+    }
+    ext._caretListener = null;
+    ext._caretHandler = null;
 }
 
 export function sendPaste(ext) {

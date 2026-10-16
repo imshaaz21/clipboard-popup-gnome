@@ -10,7 +10,7 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {History} from './history.js';
-import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste, syncPrivateIcon} from './actions.js';
+import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste, syncPrivateIcon, trackCaret, untrackCaret} from './actions.js';
 import {rebuildMenu, rebuildPanelMenu, releaseMenu} from './menu.js';
 
 const CLIP = St.ClipboardType.CLIPBOARD;
@@ -59,6 +59,9 @@ export default class ClipboardPopupExtension extends Extension {
                 this._parkAnchor();
         });
         this._timeoutIds = new Set();
+        this._caretPos = null;
+        this._caretListener = null;
+        trackCaret(this);
 
         this._selectionSignalId = this._connectSelectionSignal();
         this._trimSignalId = this._settings.connect('changed::history-size',
@@ -106,6 +109,7 @@ export default class ClipboardPopupExtension extends Extension {
             GLib.Source.remove(id);
         this._timeoutIds?.clear();
         this._timeoutIds = null;
+        untrackCaret(this);
         if (this._menuSignalId)
             this._menu?.disconnect(this._menuSignalId);
         this._menuSignalId = 0;
@@ -220,7 +224,18 @@ export default class ClipboardPopupExtension extends Extension {
         const [x, y] = global.get_pointer();
         let px = x, py = y;
         const focus = global.display.focus_window;
-        if (focus) {
+        const caret = this._caretPos;
+        if (focus && caret && caret.width >= 0) {
+            const r = focus.get_frame_rect();
+            if (caret.x >= r.x && caret.x <= r.x + r.width &&
+                caret.y >= r.y && caret.y <= r.y + r.height) {
+                px = caret.x;
+                py = caret.y + caret.height + 4;
+            } else {
+                px = r.x + Math.round(r.width / 2);
+                py = r.y + Math.round(r.height / 4);
+            }
+        } else if (focus) {
             const r = focus.get_frame_rect();
             if (x < r.x || x > r.x + r.width || y < r.y || y > r.y + r.height) {
                 px = r.x + Math.round(r.width / 2);

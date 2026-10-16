@@ -11,14 +11,10 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {History} from './history.js';
+import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste} from './actions.js';
 
 const CLIP = St.ClipboardType.CLIPBOARD;
 const PASTE_DELAY_MS = 60;
-
-// Evdev keycodes for Shift+Insert: a paste accelerator accepted by terminals,
-// GTK apps, browsers and Qt apps alike, so no per-app detection is needed.
-const KEY_SHIFT_L = 42;
-const KEY_INSERT = 110;
 
 export default class ClipboardPopupExtension extends Extension {
     enable() {
@@ -26,15 +22,13 @@ export default class ClipboardPopupExtension extends Extension {
         this._history = new History();
         this._suppressCapture = false;
 
-        // Invisible anchor the popup menu is positioned against; moved to the
-        // pointer each time the hotkey fires so the menu opens like a context menu.
+        // Invisible anchor moved to the pointer so the menu opens like a context menu.
         this._anchor = new St.Widget({reactive: false, opacity: 0, width: 1, height: 1});
         Main.uiGroup.add_child(this._anchor);
 
         this._menu = new PopupMenu.PopupMenu(this._anchor, 0.5, St.Side.TOP);
         Main.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
-        // Panel icon for mouse users; the hotkey stays the main entry point.
         this._indicator = new PanelMenu.Button(0, this.metadata.name, true);
         this._indicator.add_child(new St.Icon({icon_name: 'edit-paste-symbolic', style_class: 'system-status-icon'}));
         this._indicatorSignalId = this._indicator.connect('button-press-event', () => {
@@ -51,13 +45,31 @@ export default class ClipboardPopupExtension extends Extension {
         this._selectionSignalId = this._connectSelectionSignal();
         this._trimSignalId = this._settings.connect('changed::history-size',
             () => this._history.trim(this._settings.get_int('history-size')));
+        this._onlyPinnedSignalId = this._settings.connect('changed::cache-only-favorites',
+            () => (this._history.onlyPinned = this._settings.get_boolean('cache-only-favorites')));
+        this._history.onlyPinned = this._settings.get_boolean('cache-only-favorites');
+        this._cycleIndex = null;
 
-        Main.wm.addKeybinding('popup-shortcut', this._settings, Meta.KeyBindingFlags.NONE,
-            Shell.ActionMode.NORMAL, () => this._openPopup());
+        this._handlers = {
+            'popup-shortcut': () => this._openPopup(),
+            'next-entry': () => cycleEntry(this, 1),
+            'prev-entry': () => cycleEntry(this, -1),
+            'toggle-private-mode': () => togglePrivateMode(this),
+        };
+        this._keybindings = Object.keys(this._handlers);
+        for (const key of this._keybindings)
+            Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE,
+                Shell.ActionMode.NORMAL, this._handlers[key]);
     }
 
     disable() {
-        Main.wm.removeKeybinding('popup-shortcut');
+        for (const key of this._keybindings)
+            Main.wm.removeKeybinding(key);
+        this._keybindings = null;
+        this._handlers = null;
+        if (this._onlyPinnedSignalId)
+            this._settings.disconnect(this._onlyPinnedSignalId);
+        this._onlyPinnedSignalId = 0;
         if (this._selectionSignalId)
             this._selection.disconnect(this._selectionSignalId);
         this._selectionSignalId = 0;
@@ -81,7 +93,7 @@ export default class ClipboardPopupExtension extends Extension {
         this._menu = null;
         this._anchor.destroy();
         this._anchor = null;
-        this._history.save();
+        this._history.finalize();
         this._history = null;
         this._device = null;
         this._settings = null;
@@ -118,17 +130,26 @@ export default class ClipboardPopupExtension extends Extension {
         clipboard.get_text(CLIP, (_cb, text) => {
             if (!this._history)
                 return;
+            if (this._settings.get_boolean('strip-text') && text)
+                text = text.trim();
             if (text && text.trim()) {
                 const entry = this._history.addText(text);
-                if (entry)
+                if (entry) {
+                    this._cycleIndex = null;
                     this._history.trim(this._settings.get_int('history-size'));
+                    if (this._settings.get_boolean('notify-on-copy'))
+                        showOsd('edit-copy-symbolic', _('Copied to history'));
+                }
                 return;
             }
-            // Not text - try an image.
             clipboard.get_content(CLIP, 'image/png', (_cb2, bytes) => {
                 if (bytes && this._history) {
-                    if (this._history.addImage(bytes))
+                    if (this._history.addImage(bytes)) {
+                        this._cycleIndex = null;
                         this._history.trim(this._settings.get_int('history-size'));
+                        if (this._settings.get_boolean('notify-on-copy'))
+                            showOsd('image-x-generic-symbolic', _('Image copied to history'));
+                    }
                 }
             });
         });
@@ -159,7 +180,17 @@ export default class ClipboardPopupExtension extends Extension {
         this._menu.addMenuItem(privateItem);
 
         const clearItem = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
-        clearItem.connect('activate', () => this._history.clear());
+        let armed = false;
+        clearItem.connect('activate', () => {
+            if (this._settings.get_boolean('confirm-clear') && !armed) {
+                armed = true;
+                clearItem.label.set_text(_('Really clear? Click again'));
+                return;
+            }
+            this._history.clear();
+            armed = false;
+            this._rebuildMenu();
+        });
         this._menu.addMenuItem(clearItem);
     }
 
@@ -212,49 +243,13 @@ export default class ClipboardPopupExtension extends Extension {
         this._later(PASTE_DELAY_MS * 4, () => {
             this._suppressCapture = false;
         });
+        if (this._settings.get_boolean('move-item-first'))
+            this._history.moveFirst(entry.id);
 
-        if (entry.kind === 'image') {
-            const setImage = bytes => {
-                if (bytes && this._history)
-                    clipboard.set_content(CLIP, 'image/png', bytes);
-            };
-            if (entry._bytes) {
-                setImage(entry._bytes);
-            } else {
-                Gio.File.new_for_path(entry.imageFile).load_contents_async(null, (file, res) => {
-                    try {
-                        const [ok, data] = file.load_contents_finish(res);
-                        setImage(ok ? new GLib.Bytes(data) : null);
-                    } catch (e) {
-                        console.error(`clipboard-popup: ${e.message}`);
-                    }
-                });
-            }
-        } else {
-            clipboard.set_text(CLIP, entry.text);
-        }
+        setClipboardEntry(entry, clipboard);
 
         if (this._settings.get_boolean('paste-on-select'))
-            this._later(PASTE_DELAY_MS, () => this._sendPaste());
-    }
-
-    // The PowerToys trick: simulate a paste keypress (Shift+Insert works everywhere, even terminals).
-    _sendPaste() {
-        try {
-            // One cached device; creating one per paste leaks.
-            if (!this._device) {
-                this._device = Clutter.get_default_backend().get_default_seat()
-                    .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
-            }
-            const device = this._device;
-            const t = Clutter.get_current_event_time() * 1000;
-            device.notify_key(t, KEY_SHIFT_L, Clutter.KeyState.PRESSED);
-            device.notify_key(t, KEY_INSERT, Clutter.KeyState.PRESSED);
-            device.notify_key(t, KEY_INSERT, Clutter.KeyState.RELEASED);
-            device.notify_key(t, KEY_SHIFT_L, Clutter.KeyState.RELEASED);
-        } catch (e) {
-            console.error(`clipboard-popup: paste injection failed: ${e.message}`);
-        }
+            this._later(PASTE_DELAY_MS, () => sendPaste(this));
     }
 
     _parkAnchor() {

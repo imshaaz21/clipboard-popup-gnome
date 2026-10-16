@@ -43,20 +43,65 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         settings.bind('private-mode', privateRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(privateRow);
 
-        const shortcutRow = new Adw.EntryRow({
-            title: _('Popup shortcut (e.g. <Super>v, empty disables)'),
-            show_apply_button: true,
-            text: settings.get_strv('popup-shortcut')[0] ?? '',
+        const notifyRow = new Adw.SwitchRow({
+            title: _('Notify on copy'),
+            subtitle: _('Show an OSD when new content is recorded'),
         });
-        shortcutRow.connect('apply', () => {
-            const accel = shortcutRow.text.trim();
-            if (accel && !Gtk.accelerator_parse(accel)[0]) {
-                shortcutRow.add_css_class('error');
-                return;
-            }
-            shortcutRow.remove_css_class('error');
-            settings.set_strv('popup-shortcut', accel ? [accel] : []);
+        settings.bind('notify-on-copy', notifyRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(notifyRow);
+
+        const confirmRow = new Adw.SwitchRow({
+            title: _('Confirm clear'),
+            subtitle: _('Require a second click before wiping history'),
         });
-        group.add(shortcutRow);
+        settings.bind('confirm-clear', confirmRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(confirmRow);
+
+        const stripRow = new Adw.SwitchRow({
+            title: _('Strip text'),
+            subtitle: _('Trim whitespace from copied text'),
+        });
+        settings.bind('strip-text', stripRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(stripRow);
+
+        const moveRow = new Adw.SwitchRow({
+            title: _('Move item first'),
+            subtitle: _('Selected entries jump to the top of history'),
+        });
+        settings.bind('move-item-first', moveRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(moveRow);
+
+        const cacheRow = new Adw.SwitchRow({
+            title: _('Cache only favorites'),
+            subtitle: _('Only pinned entries survive a restart'),
+        });
+        settings.bind('cache-only-favorites', cacheRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(cacheRow);
+
+        const keysGroup = new Adw.PreferencesGroup({title: _('Keyboard shortcuts')});
+        page.add(keysGroup);
+
+        const makeShortcutRow = (key, title) => {
+            const row = new Adw.EntryRow({
+                title: `${title} (${_('empty disables')})`,
+                show_apply_button: true,
+                text: settings.get_strv(key)[0] ?? '',
+            });
+            row.connect('apply', () => {
+                const accel = row.text.trim();
+                if (accel && !Gtk.accelerator_parse(accel)[0]) {
+                    row.add_css_class('error');
+                    return;
+                }
+                row.remove_css_class('error');
+                settings.set_strv(key, accel ? [accel] : []);
+            });
+            keysGroup.add(row);
+        };
+
+        makeShortcutRow('popup-shortcut', _('Popup at pointer'));
+        makeShortcutRow('next-entry', _('Next entry (older)'));
+        makeShortcutRow('prev-entry', _('Previous entry (newer)'));
+        makeShortcutRow('toggle-private-mode', _('Toggle private mode'));
     }
 }

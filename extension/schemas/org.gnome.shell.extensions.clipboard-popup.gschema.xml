@@ -17,10 +17,50 @@
             <summary>Private mode</summary>
             <description>When enabled, new clipboard contents are not recorded to history.</description>
         </key>
+        <key name="notify-on-copy" type="b">
+            <default>false</default>
+            <summary>Notify on copy</summary>
+            <description>Show an OSD whenever new content is recorded to clipboard history.</description>
+        </key>
+        <key name="confirm-clear" type="b">
+            <default>true</default>
+            <summary>Confirm clear</summary>
+            <description>Require a second click on Clear history before entries are wiped.</description>
+        </key>
+        <key name="strip-text" type="b">
+            <default>false</default>
+            <summary>Strip text</summary>
+            <description>Trim leading and trailing whitespace from copied text before storing it.</description>
+        </key>
+        <key name="move-item-first" type="b">
+            <default>false</default>
+            <summary>Move item first</summary>
+            <description>Move a selected entry to the top of the history.</description>
+        </key>
+        <key name="cache-only-favorites" type="b">
+            <default>false</default>
+            <summary>Cache only favorites</summary>
+            <description>Only pinned entries are written to disk; unpinned history is lost on restart.</description>
+        </key>
         <key name="popup-shortcut" type="as">
             <default><![CDATA[['<Super>v']]]></default>
             <summary>Popup shortcut</summary>
             <description>Keyboard shortcut that opens the clipboard popup at the pointer. Empty disables it.</description>
+        </key>
+        <key name="next-entry" type="as">
+            <default><![CDATA[['<Ctrl><Super>v']]]></default>
+            <summary>Next entry shortcut</summary>
+            <description>Cycle the clipboard to the next older history entry. Empty disables it.</description>
+        </key>
+        <key name="prev-entry" type="as">
+            <default><![CDATA[['<Ctrl><Super>b']]]></default>
+            <summary>Previous entry shortcut</summary>
+            <description>Cycle the clipboard back to the previous newer history entry. Empty disables it.</description>
+        </key>
+        <key name="toggle-private-mode" type="as">
+            <default><![CDATA[[]]]></default>
+            <summary>Private mode shortcut</summary>
+            <description>Keyboard shortcut toggling private mode. Empty disables it.</description>
         </key>
         <key name="preview-length" type="i">
             <default>80</default>

@@ -13,6 +13,7 @@ export class History {
         this._file = GLib.build_filenamev([this._dir, HISTORY_FILE]);
         this.entries = [];
         this._nextId = 1;
+        this.onlyPinned = false;
         this._load();
     }
 
@@ -41,7 +42,8 @@ export class History {
         try {
             GLib.mkdir_with_parents(this._dir, 0o700);
             const file = Gio.File.new_for_path(this._file);
-            const json = JSON.stringify(this.entries, (k, v) => k === '_bytes' ? undefined : v);
+            const entries = this.onlyPinned ? this.entries.filter(e => e.pinned) : this.entries;
+            const json = JSON.stringify(entries, (k, v) => k === '_bytes' ? undefined : v);
             file.replace_contents_async(new TextEncoder().encode(json),
                 null, false, Gio.FileCreateFlags.NONE, null, (f, res) => {
                     try {
@@ -70,7 +72,7 @@ export class History {
     // bytes: GLib.Bytes of PNG data. Writes it to the images dir.
     addImage(bytes) {
         // Dedup across the whole history, not just the newest entry.
-        const hash = bytes.hash();
+        const hash = GLib.compute_checksum_for_bytes(GLib.ChecksumType.SHA256, bytes);
         if (this.entries.some(e => e.kind === 'image' && e.imgHash === hash))
             return null;
         try {
@@ -96,6 +98,25 @@ export class History {
         } catch (e) {
             console.error(`clipboard-popup: image save failed: ${e.message}`);
             return null;
+        }
+    }
+
+    // With onlyPinned, unpinned entries aren't persisted, so drop their image files too.
+    finalize() {
+        if (this.onlyPinned) {
+            for (const e of this.entries) {
+                if (e.kind === 'image' && !e.pinned)
+                    try { Gio.File.new_for_path(e.imageFile).delete(null); } catch (_) {}
+            }
+        }
+        this.save();
+    }
+
+    moveFirst(id) {
+        const i = this.entries.findIndex(x => x.id === id);
+        if (i > 0) {
+            this.entries.unshift(this.entries.splice(i, 1)[0]);
+            this.save();
         }
     }
 

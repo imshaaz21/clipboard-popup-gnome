@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 10:47+0530\n"
+"POT-Creation-Date: 2026-10-16 10:52+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,40 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension/extension.js:148
+#: extension/actions.js:52
+msgid "Image"
+msgstr ""
+
+#: extension/actions.js:60
+msgid "Private mode on"
+msgstr ""
+
+#: extension/actions.js:60
+msgid "Private mode off"
+msgstr ""
+
+#: extension/extension.js:141
+msgid "Copied to history"
+msgstr ""
+
+#: extension/extension.js:151
+msgid "Image copied to history"
+msgstr ""
+
+#: extension/extension.js:169
 msgid "Clipboard history is empty"
 msgstr ""
 
-#: extension/extension.js:157
+#: extension/extension.js:178
 msgid "Private mode (pause recording)"
 msgstr ""
 
-#: extension/extension.js:162
+#: extension/extension.js:182
 msgid "Clear history (keeps pinned)"
+msgstr ""
+
+#: extension/extension.js:187
+msgid "Really clear? Click again"
 msgstr ""
 
 #: extension/prefs.js:13
@@ -66,5 +90,65 @@ msgid "Stop recording clipboard contents until turned off"
 msgstr ""
 
 #: extension/prefs.js:47
-msgid "Popup shortcut (e.g. <Super>v, empty disables)"
+msgid "Notify on copy"
+msgstr ""
+
+#: extension/prefs.js:48
+msgid "Show an OSD when new content is recorded"
+msgstr ""
+
+#: extension/prefs.js:54
+msgid "Confirm clear"
+msgstr ""
+
+#: extension/prefs.js:55
+msgid "Require a second click before wiping history"
+msgstr ""
+
+#: extension/prefs.js:61
+msgid "Strip text"
+msgstr ""
+
+#: extension/prefs.js:62
+msgid "Trim whitespace from copied text"
+msgstr ""
+
+#: extension/prefs.js:68
+msgid "Move item first"
+msgstr ""
+
+#: extension/prefs.js:69
+msgid "Selected entries jump to the top of history"
+msgstr ""
+
+#: extension/prefs.js:75
+msgid "Cache only favorites"
+msgstr ""
+
+#: extension/prefs.js:76
+msgid "Only pinned entries survive a restart"
+msgstr ""
+
+#: extension/prefs.js:81
+msgid "Keyboard shortcuts"
+msgstr ""
+
+#: extension/prefs.js:86
+msgid "empty disables"
+msgstr ""
+
+#: extension/prefs.js:102
+msgid "Popup at pointer"
+msgstr ""
+
+#: extension/prefs.js:103
+msgid "Next entry (older)"
+msgstr ""
+
+#: extension/prefs.js:104
+msgid "Previous entry (newer)"
+msgstr ""
+
+#: extension/prefs.js:105
+msgid "Toggle private mode"
 msgstr ""

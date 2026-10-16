@@ -11,7 +11,8 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {History} from './history.js';
-import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste} from './actions.js';
+import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste, syncPrivateIcon} from './actions.js';
+import {rebuildMenu, releaseMenu} from './menu.js';
 
 const CLIP = St.ClipboardType.CLIPBOARD;
 const PASTE_DELAY_MS = 60;
@@ -30,12 +31,20 @@ export default class ClipboardPopupExtension extends Extension {
         Main.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
         this._indicator = new PanelMenu.Button(0, this.metadata.name, true);
-        this._indicator.add_child(new St.Icon({icon_name: 'edit-paste-symbolic', style_class: 'system-status-icon'}));
-        this._indicatorSignalId = this._indicator.connect('button-press-event', () => {
+        this._indicatorIcon = new St.Icon({icon_name: 'edit-paste-symbolic', style_class: 'system-status-icon'});
+        this._indicator.add_child(this._indicatorIcon);
+        this._indicatorSignalId = this._indicator.connect('button-press-event', (_a, event) => {
+            if (event.get_button() === 3) {
+                togglePrivateMode(this);
+                return Clutter.EVENT_STOP;
+            }
             this._openPopup();
             return Clutter.EVENT_STOP;
         });
         Main.panel.addToStatusArea(this.uuid, this._indicator);
+        this._privateSignalId = this._settings.connect('changed::private-mode',
+            () => syncPrivateIcon(this));
+        syncPrivateIcon(this);
         this._menuSignalId = this._menu.connect('open-state-changed', (_m, open) => {
             if (!open)
                 this._parkAnchor();
@@ -84,11 +93,17 @@ export default class ClipboardPopupExtension extends Extension {
         if (this._menuSignalId)
             this._menu.disconnect(this._menuSignalId);
         this._menuSignalId = 0;
+        if (this._privateSignalId)
+            this._settings.disconnect(this._privateSignalId);
+        this._privateSignalId = 0;
         if (this._indicatorSignalId)
             this._indicator.disconnect(this._indicatorSignalId);
         this._indicatorSignalId = 0;
+        this._indicatorIcon.destroy();
+        this._indicatorIcon = null;
         this._indicator.destroy();
         this._indicator = null;
+        releaseMenu(this);
         this._menu.destroy();
         this._menu = null;
         this._anchor.destroy();
@@ -158,95 +173,8 @@ export default class ClipboardPopupExtension extends Extension {
     _openPopup() {
         const [x, y] = global.get_pointer();
         this._anchor.set_position(Math.max(0, x), Math.max(0, y));
-        this._rebuildMenu();
+        rebuildMenu(this);
         this._menu.open();
-    }
-
-    _rebuildMenu() {
-        this._menu.removeAll();
-
-        if (this._history.entries.length === 0) {
-            const empty = new PopupMenu.PopupMenuItem(_('Clipboard history is empty'), {reactive: false});
-            this._menu.addMenuItem(empty);
-        } else {
-            const scroll = new St.ScrollView({
-                hscrollbar_policy: St.PolicyType.NEVER,
-                vscrollbar_policy: St.PolicyType.AUTOMATIC,
-                overlay_scrollbars: true,
-                y_expand: false,
-                style: 'max-height: 480px;',
-            });
-            const section = new PopupMenu.PopupMenuSection();
-            for (const entry of this._history.entries)
-                section.addMenuItem(this._makeEntryItem(entry));
-            scroll.add_child(section.actor);
-            const scrollSection = new PopupMenu.PopupMenuSection();
-            scrollSection.actor.add_child(scroll);
-            this._menu.addMenuItem(scrollSection);
-        }
-
-        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-        const privateItem = new PopupMenu.PopupSwitchMenuItem(_('Private mode (pause recording)'), this._settings.get_boolean('private-mode'));
-        privateItem.connect('toggled', () => this._settings.set_boolean('private-mode', privateItem.state));
-        this._menu.addMenuItem(privateItem);
-
-        const clearItem = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
-        let armed = false;
-        clearItem.connect('activate', () => {
-            if (this._settings.get_boolean('confirm-clear') && !armed) {
-                armed = true;
-                clearItem.label.set_text(_('Really clear? Click again'));
-                return;
-            }
-            this._history.clear();
-            armed = false;
-            this._rebuildMenu();
-        });
-        this._menu.addMenuItem(clearItem);
-    }
-
-    _makeEntryItem(entry) {
-        const item = new PopupMenu.PopupBaseMenuItem();
-
-        if (entry.kind === 'image') {
-            item.add_child(new St.Icon({
-                gicon: Gio.FileIcon.new(Gio.File.new_for_path(entry.imageFile)),
-                icon_size: 64,
-            }));
-        } else {
-            const preview = entry.text.replace(/\s+/g, ' ');
-            const max = this._settings.get_int('preview-length');
-            item.add_child(new St.Label({
-                text: preview.length > max ? `${preview.slice(0, max - 1)}…` : preview,
-                x_expand: true,
-            }));
-        }
-
-        const pinBtn = this._iconButton(entry.pinned ? 'starred-symbolic' : 'non-starred-symbolic',
-            () => {
-                this._history.togglePin(entry.id);
-                this._rebuildMenu();
-            });
-        item.add_child(pinBtn);
-
-        const delBtn = this._iconButton('window-close-symbolic',
-            () => {
-                this._history.remove(entry.id);
-                this._rebuildMenu();
-            });
-        item.add_child(delBtn);
-
-        item.connect('activate', () => this._selectEntry(entry));
-        return item;
-    }
-
-    _iconButton(iconName, onClick) {
-        const btn = new St.Button({
-            child: new St.Icon({icon_name: iconName, icon_size: 14}),
-        });
-        btn.connect('clicked', onClick);
-        return btn;
     }
 
     _selectEntry(entry) {

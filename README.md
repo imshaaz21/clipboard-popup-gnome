@@ -18,7 +18,7 @@ A GNOME Shell extension that brings the Windows **Win+V** clipboard experience t
 - Per-entry delete, and a Clear history action that keeps pinned entries
 - **Paste on select**: the chosen entry is placed on the clipboard and Shift+Insert is simulated (works in terminals too) - the PowerToys trick
 - **Cycle without opening**: next/prev entry keybindings step through history with an OSD preview
-- **Private mode**: pause recording from the popup, preferences, or a keybinding
+- **Private mode**: right-click the panel icon (or use a keybinding/preference) to pause recording - the icon switches to a pause glyph while it is on
 - History survives reboots (stored in `~/.cache/clipboard-popup/`)
 - Configurable history size and text preview length
 - Lightweight: signal-driven, no polling, no subprocesses, all file IO async - zero cost while idle
@@ -65,7 +65,7 @@ Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.gi
 - **Cache only favorites** - only pinned entries survive a restart
 - **Shortcuts** - editable in preferences; popup (`<Super>v`), next/prev entry cycling, private-mode toggle; empty disables
 
-A panel icon also opens the popup. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Paste-on-select sends Shift+Insert, which terminals accept too, so it works in every app.
+The panel icon opens the popup on left-click; right-click toggles private mode. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Paste-on-select sends Shift+Insert, which terminals accept too, so it works in every app.
 
 ## Translations
 

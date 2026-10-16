@@ -14,7 +14,7 @@ pack:      ## build dist/$(UUID).shell-extension.zip for extensions.gnome.org
 			msgfmt -o extension/locale/$$lang/LC_MESSAGES/clipboard-popup.mo $$po; \
 		done; \
 	fi
-	gnome-extensions pack extension --extra-source=history.js --extra-source=actions.js --force --out-dir=dist
+	gnome-extensions pack extension --extra-source=history.js --extra-source=actions.js --extra-source=menu.js --force --out-dir=dist
 
 install: pack ## install the packed build for the current user
 	gnome-extensions install --force dist/$(UUID).shell-extension.zip

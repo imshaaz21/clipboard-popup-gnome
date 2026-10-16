@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 10:52+0530\n"
+"POT-Creation-Date: 2026-10-16 10:55+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,27 +29,23 @@ msgstr ""
 msgid "Private mode off"
 msgstr ""
 
-#: extension/extension.js:141
+#: extension/extension.js:156
 msgid "Copied to history"
 msgstr ""
 
-#: extension/extension.js:151
+#: extension/extension.js:166
 msgid "Image copied to history"
 msgstr ""
 
-#: extension/extension.js:169
+#: extension/menu.js:71
 msgid "Clipboard history is empty"
 msgstr ""
 
-#: extension/extension.js:178
-msgid "Private mode (pause recording)"
-msgstr ""
-
-#: extension/extension.js:182
+#: extension/menu.js:92
 msgid "Clear history (keeps pinned)"
 msgstr ""
 
-#: extension/extension.js:187
+#: extension/menu.js:97
 msgid "Really clear? Click again"
 msgstr ""
 

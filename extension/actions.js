@@ -60,6 +60,11 @@ export function togglePrivateMode(ext) {
     showOsd('changes-prevent-symbolic', on ? _('Private mode on') : _('Private mode off'));
 }
 
+export function syncPrivateIcon(ext) {
+    ext._indicatorIcon.icon_name = ext._settings.get_boolean('private-mode')
+        ? 'changes-prevent-symbolic' : 'edit-paste-symbolic';
+}
+
 export function sendPaste(ext) {
     try {
         if (!ext._device) {

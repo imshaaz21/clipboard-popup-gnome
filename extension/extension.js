@@ -1,5 +1,4 @@
 import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
@@ -31,11 +30,7 @@ export default class ClipboardPopupExtension extends Extension {
         Main.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
         this._indicator = new PanelMenu.Button(0, this.metadata.name, true);
-        this._indicatorIcon = new St.Icon({
-            gicon: Gio.FileIcon.new(Gio.File.new_for_path(
-                GLib.build_filenamev([this.dir.get_path(), 'icons', 'clipboard-popup-symbolic.svg']))),
-            style_class: 'system-status-icon',
-        });
+        this._indicatorIcon = new St.Icon({style_class: 'system-status-icon'});
         this._indicator.add_child(this._indicatorIcon);
         this._indicatorSignalId = this._indicator.connect('button-press-event', (_a, event) => {
             if (event.get_button() === 3) {

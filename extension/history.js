@@ -36,6 +36,7 @@ export class History {
                         this._nextId = e.id + 1;
                 }
             } catch (e) {
+                console.error(`clipboard-popup: history load failed: ${e.message}`);
             }
         });
     }

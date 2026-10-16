@@ -7,16 +7,17 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 function trackSignal(ext, actor, id) {
     if (!ext._menuSignals)
         ext._menuSignals = [];
-    ext._menuSignals.push([actor, id]);
+    ext._menuSignals.push({actor, id});
 }
 
 function disconnectMenuSignals(ext) {
     if (!ext._menuSignals)
         return;
-    for (const [actor, id] of ext._menuSignals) {
+    for (const pair of ext._menuSignals) {
         try {
-            actor.disconnect(id);
+            pair.actor.disconnect(pair.id);
         } catch (e) {
+            // actor already destroyed; nothing left to disconnect
         }
     }
     ext._menuSignals = null;

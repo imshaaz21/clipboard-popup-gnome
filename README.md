@@ -8,9 +8,9 @@
 
 A GNOME Shell extension that brings the Windows **Win+V** clipboard manager experience to GNOME: press **Super+V** and a clipboard history popup opens right where your mouse pointer is - like a right-click menu. Text and images, pin favorite entries, paste-on-select, private mode, and keyboard cycling. It is the GNOME equivalent of the Windows clipboard history popup, and a pointer-anchored alternative to top-bar clipboard indicators like GPaste or Clipboard Indicator. Works on Wayland and X11, on Ubuntu, Fedora, Arch and any GNOME 45-50 desktop.
 
-| Popup at pointer | Panel icon | Preferences |
-|:---:|:---:|:---:|
-| ![Clipboard popup](docs/popup.png) | ![Panel icon](docs/panel.png) | ![Preferences](docs/prefs.png) |
+| Popup at pointer | Panel icon |
+|:---:|:---:|
+| ![Clipboard popup](docs/popup.png) | ![Panel icon](docs/panel.png) |
 
 ## Features
 

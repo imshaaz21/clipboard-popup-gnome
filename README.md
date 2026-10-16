@@ -6,9 +6,9 @@
 
 A GNOME Shell extension that brings the Windows **Win+V** clipboard experience to GNOME: press **Super+V** and a popup opens right where your mouse pointer is - like a right-click menu - listing your clipboard history. Pick an entry and it is pasted into whatever you were typing in.
 
-| The popup opens where the pointer is |
-|:---:|
-| ![Clipboard popup](docs/popup.png) |
+| Popup at pointer | Panel icon | Preferences |
+|:---:|:---:|:---:|
+| ![Clipboard popup](docs/popup.png) | ![Panel icon](docs/panel.png) | ![Preferences](docs/prefs.png) |
 
 ## Features
 

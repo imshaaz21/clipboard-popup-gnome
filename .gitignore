@@ -31,3 +31,7 @@ out/
 
 # Build output
 dist/
+
+# Translations
+extension/locale/
+*.mo

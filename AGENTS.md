@@ -36,7 +36,12 @@ Makefile                 # pack / install / nested (throwaway shell for testing)
   propagate to the shell log.
 - **No `stylesheet.css`** - size/style via widget properties only.
 - **Wrap user-visible strings in `_()`** - never translatable text in template
-  literals.
+  literals. Translations live in `po/`; `make pot` regenerates the POT and
+  `make pack` compiles `.po` files into `extension/locale/`. When the first
+  `.po` is added, also add `"gettext-domain": "clipboard-popup"` to
+  metadata.json - it is omitted for now because shexli 0.2.1 crashes on it.
+  Also note: shexli 0.2.1's parser segfaults on multi-line ternaries that
+  return array literals - keep such ternaries on one line.
 - **No em dashes** anywhere - use `-`.
 - **Clipboard access is declared** in `metadata.json` description; keep that
   sentence accurate if behavior changes.

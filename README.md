@@ -6,6 +6,10 @@
 
 A GNOME Shell extension that brings the Windows **Win+V** clipboard experience to GNOME: press **Super+V** and a popup opens right where your mouse pointer is - like a right-click menu - listing your clipboard history. Pick an entry and it is pasted into whatever you were typing in.
 
+| The popup opens where the pointer is |
+|:---:|
+| ![Clipboard popup](docs/popup.png) |
+
 ## Features
 
 - Popup at the mouse pointer, keyboard navigable (arrow keys + Enter), like a context menu
@@ -51,11 +55,23 @@ Open from Extensions app or `gnome-extensions prefs clipboard-popup@imshaaz21.gi
 - **History size** - maximum unpinned entries kept (5-200, default 25)
 - **Text preview length** - characters shown per text entry
 - **Paste on select** - simulate Ctrl+V after picking an entry
-- **Popup shortcut** - change via `dconf` key `/org/gnome/shell/extensions/clipboard-popup/popup-shortcut` (default `['<Super>v']`)
+- **Popup shortcut** - editable in the preferences window, e.g. `<Super>v`; empty disables it (default `<Super>v`)
+
+A panel icon also opens the popup. If `Super+V` clashes with GNOME's notification tray, pick another shortcut. Terminals are detected automatically and paste with `Ctrl+Shift+V`.
+
+## Translations
+
+The extension is translatable. To add a language:
+
+```bash
+make pot                            # regenerate po/clipboard-popup.pot
+msginit -i po/clipboard-popup.pot -l <lang> -o po/<lang>.po
+# translate, then make pack compiles it into the extension
+```
 
 ## Privacy
 
-Clipboard history may contain sensitive data (passwords, tokens). It is stored unencrypted in `~/.cache/clipboard-popup/` and never leaves your machine - the extension has no network access. See [SECURITY.md](SECURITY.md).
+Clipboard history may contain sensitive data (passwords, tokens). It is stored in `~/.cache/clipboard-popup/` and never leaves your machine; entries flagged by password managers (`x-kde-passwordManagerHint`) are skipped. History is not encrypted; the extension has no network access. See [SECURITY.md](SECURITY.md).
 
 ## Contributing
 

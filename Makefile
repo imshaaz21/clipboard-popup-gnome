@@ -1,9 +1,19 @@
 UUID := clipboard-popup@imshaaz21.github.com
 DEST := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 
-.PHONY: pack install uninstall nested
+.PHONY: pack install uninstall nested pot
+pot:       ## regenerate po/clipboard-popup.pot from the sources
+	mkdir -p po
+	xgettext --from-code=UTF-8 --keyword=_ --output=po/clipboard-popup.pot extension/*.js
 pack:      ## build dist/$(UUID).shell-extension.zip for extensions.gnome.org
 	mkdir -p dist
+	@if ls po/*.po >/dev/null 2>&1; then \
+		for po in po/*.po; do \
+			lang=$$(basename $$po .po); \
+			mkdir -p extension/locale/$$lang/LC_MESSAGES; \
+			msgfmt -o extension/locale/$$lang/LC_MESSAGES/clipboard-popup.mo $$po; \
+		done; \
+	fi
 	gnome-extensions pack extension --extra-source=history.js --force --out-dir=dist
 
 install: pack ## install the packed build for the current user

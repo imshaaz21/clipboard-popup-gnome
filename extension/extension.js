@@ -7,12 +7,19 @@ import St from 'gi://St';
 
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {History} from './history.js';
 
 const CLIP = St.ClipboardType.CLIPBOARD;
 const PASTE_DELAY_MS = 60;
+
+// Terminals paste with Ctrl+Shift+V, not Ctrl+V.
+const TERMINAL_WM_CLASSES = [
+    'gnome-terminal-server', 'kgx', 'alacritty', 'kitty', 'foot',
+    'tilix', 'wezterm-gui', 'xterm', 'terminator', 'guake',
+];
 
 export default class ClipboardPopupExtension extends Extension {
     enable() {
@@ -28,6 +35,14 @@ export default class ClipboardPopupExtension extends Extension {
         this._menu = new PopupMenu.PopupMenu(this._anchor, 0.5, St.Side.TOP);
         Main.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
+        // Panel icon for mouse users; the hotkey stays the main entry point.
+        this._indicator = new PanelMenu.Button(0, this.metadata.name, true);
+        this._indicator.add_child(new St.Icon({icon_name: 'edit-paste-symbolic', style_class: 'system-status-icon'}));
+        this._indicatorSignalId = this._indicator.connect('button-press-event', () => {
+            this._openPopup();
+            return Clutter.EVENT_STOP;
+        });
+        Main.panel.addToStatusArea(this.uuid, this._indicator);
         this._menuSignalId = this._menu.connect('open-state-changed', (_m, open) => {
             if (!open)
                 this._parkAnchor();
@@ -45,8 +60,9 @@ export default class ClipboardPopupExtension extends Extension {
     disable() {
         Main.wm.removeKeybinding('popup-shortcut');
         if (this._selectionSignalId)
-            global.display.disconnect(this._selectionSignalId);
+            this._selection.disconnect(this._selectionSignalId);
         this._selectionSignalId = 0;
+        this._selection = null;
         if (this._trimSignalId)
             this._settings.disconnect(this._trimSignalId);
         this._trimSignalId = 0;
@@ -57,6 +73,11 @@ export default class ClipboardPopupExtension extends Extension {
         if (this._menuSignalId)
             this._menu.disconnect(this._menuSignalId);
         this._menuSignalId = 0;
+        if (this._indicatorSignalId)
+            this._indicator.disconnect(this._indicatorSignalId);
+        this._indicatorSignalId = 0;
+        this._indicator.destroy();
+        this._indicator = null;
         this._menu.destroy();
         this._menu = null;
         this._anchor.destroy();
@@ -78,8 +99,9 @@ export default class ClipboardPopupExtension extends Extension {
 
     _connectSelectionSignal() {
         try {
-            return global.display.connect('selection-owner-changed',
-                (_display, selType) => this._onSelectionChanged(selType));
+            this._selection = global.display.get_selection();
+            return this._selection.connect('owner-changed',
+                (_sel, selType) => this._onSelectionChanged(selType));
         } catch (e) {
             console.error(`clipboard-popup: no selection signal: ${e.message}`);
             return 0;
@@ -222,11 +244,14 @@ export default class ClipboardPopupExtension extends Extension {
                     .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
             }
             const device = this._device;
+            const wmClass = (global.display.focus_window?.get_wm_class() ?? '').toLowerCase();
+            const terminal = TERMINAL_WM_CLASSES.includes(wmClass);
+            const seq = terminal ? [Clutter.KEY_Control_L, Clutter.KEY_Shift_L, Clutter.KEY_v] : [Clutter.KEY_Control_L, Clutter.KEY_v];
             const t = global.get_current_time();
-            device.notify_keyval(t, Clutter.KEY_Control_L, Clutter.KeyState.PRESSED);
-            device.notify_keyval(t, Clutter.KEY_v, Clutter.KeyState.PRESSED);
-            device.notify_keyval(t, Clutter.KEY_v, Clutter.KeyState.RELEASED);
-            device.notify_keyval(t, Clutter.KEY_Control_L, Clutter.KeyState.RELEASED);
+            for (const key of seq)
+                device.notify_keyval(t, key, Clutter.KeyState.PRESSED);
+            for (const key of seq.slice().reverse())
+                device.notify_keyval(t, key, Clutter.KeyState.RELEASED);
         } catch (e) {
             console.error(`clipboard-popup: paste injection failed: ${e.message}`);
         }

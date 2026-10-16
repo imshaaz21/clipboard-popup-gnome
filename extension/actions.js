@@ -61,8 +61,10 @@ export function togglePrivateMode(ext) {
 }
 
 export function syncPrivateIcon(ext) {
-    ext._indicatorIcon.icon_name = ext._settings.get_boolean('private-mode')
-        ? 'changes-prevent-symbolic' : 'edit-paste-symbolic';
+    const name = ext._settings.get_boolean('private-mode')
+        ? 'clipboard-popup-private-symbolic.svg' : 'clipboard-popup-symbolic.svg';
+    ext._indicatorIcon.gicon = Gio.FileIcon.new(Gio.File.new_for_path(
+        GLib.build_filenamev([ext.dir.get_path(), 'icons', name])));
 }
 
 export function sendPaste(ext) {

@@ -31,7 +31,11 @@ export default class ClipboardPopupExtension extends Extension {
         Main.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
         this._indicator = new PanelMenu.Button(0, this.metadata.name, true);
-        this._indicatorIcon = new St.Icon({icon_name: 'edit-paste-symbolic', style_class: 'system-status-icon'});
+        this._indicatorIcon = new St.Icon({
+            gicon: Gio.FileIcon.new(Gio.File.new_for_path(
+                GLib.build_filenamev([this.dir.get_path(), 'icons', 'clipboard-popup-symbolic.svg']))),
+            style_class: 'system-status-icon',
+        });
         this._indicator.add_child(this._indicatorIcon);
         this._indicatorSignalId = this._indicator.connect('button-press-event', (_a, event) => {
             if (event.get_button() === 3) {

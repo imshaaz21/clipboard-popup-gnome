@@ -37,6 +37,13 @@ export default class ClipboardPopupExtension extends Extension {
                 togglePrivateMode(this);
                 return Clutter.EVENT_STOP;
             }
+            if (event.get_button() === 1) {
+                rebuildPanelMenu(this);
+                this._indicator.menu.isOpen
+                    ? this._indicator.menu.close()
+                    : this._indicator.menu.open();
+                return Clutter.EVENT_STOP;
+            }
             return Clutter.EVENT_PROPAGATE;
         });
         this._panelMenuSignalId = this._indicator.menu.connect('open-state-changed', (_m, open) => {

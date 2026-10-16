@@ -8,57 +8,141 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 11:21+0530\n"
+"POT-Creation-Date: 2026-10-16 17:37+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: extension/actions.js:53 extension/menu.js:81
-msgid "Image"
+#: extension/actions.js:40
+msgid "Clipboard entry selected"
 msgstr ""
 
-#: extension/actions.js:63
+#: extension/actions.js:48
 msgid "Private mode on"
 msgstr ""
 
-#: extension/actions.js:63
+#: extension/actions.js:48
 msgid "Private mode off"
 msgstr ""
 
-#: extension/extension.js:69
+#: extension/actions.js:122
+msgid "Automatic paste failed. Paste manually."
+msgstr ""
+
+#: extension/actions.js:136
 msgid "History cleared"
 msgstr ""
 
-#: extension/extension.js:174
+#: extension/actions.js:147
+msgid "Clear clipboard history?"
+msgstr ""
+
+#: extension/actions.js:148
+msgid "Pinned entries will be kept. The system clipboard is unchanged."
+msgstr ""
+
+#: extension/actions.js:150
+msgid "Cancel"
+msgstr ""
+
+#: extension/actions.js:151 extension/prefs.js:186
+msgid "Clear history"
+msgstr ""
+
+#: extension/actions.js:188
+msgid "Close"
+msgstr ""
+
+#: extension/actions.js:189
+msgid "Copy full entry"
+msgstr ""
+
+#: extension/actions.js:192
+msgid "Previous page"
+msgstr ""
+
+#: extension/actions.js:194
+msgid "Next page"
+msgstr ""
+
+#: extension/extension.js:37
+msgid "Clipboard history could not be saved or loaded"
+msgstr ""
+
+#: extension/extension.js:243
 msgid "Copied to history"
 msgstr ""
 
-#: extension/extension.js:186
-msgid "Image copied to history"
+#: extension/menu.js:33
+msgid "Search all history"
 msgstr ""
 
-#: extension/menu.js:76
-msgid "Type to search"
+#: extension/menu.js:38
+msgid "Favorites only"
 msgstr ""
 
-#: extension/menu.js:94
-msgid "Clipboard history is empty"
-msgstr ""
-
-#: extension/menu.js:129
-msgid "Open clipboard popup"
-msgstr ""
-
-#: extension/menu.js:133 extension/prefs.js:56
+#: extension/menu.js:63 extension/prefs.js:67
 msgid "Private mode"
 msgstr ""
 
-#: extension/menu.js:145
+#: extension/menu.js:66
+msgid "Preferences"
+msgstr ""
+
+#: extension/menu.js:70
 msgid "Clear history (keeps pinned)"
+msgstr ""
+
+#: extension/menu.js:98
+msgid "Favorite limit reached"
+msgstr ""
+
+#: extension/menu.js:118
+msgid "Image"
+msgstr ""
+
+#: extension/menu.js:128
+msgid "Unpin"
+msgstr ""
+
+#: extension/menu.js:128
+msgid "Pin"
+msgstr ""
+
+#: extension/menu.js:129
+msgid "Preview"
+msgstr ""
+
+#: extension/menu.js:130
+msgid "Delete"
+msgstr ""
+
+#: extension/menu.js:132
+msgid "Pinned"
+msgstr ""
+
+#: extension/menu.js:140
+msgid "History unavailable. Check the Shell log."
+msgstr ""
+
+#: extension/menu.js:140
+msgid "Loading clipboard history…"
+msgstr ""
+
+#: extension/menu.js:142
+msgid "No matching entries"
+msgstr ""
+
+#: extension/menu.js:142
+msgid "Clipboard history is empty"
+msgstr ""
+
+#: extension/menu.js:144
+msgid "More entries match. Refine your search."
 msgstr ""
 
 #: extension/prefs.js:13
@@ -82,11 +166,11 @@ msgid "Entries rendered in the popup; older ones stay in history"
 msgstr ""
 
 #: extension/prefs.js:33
-msgid "Cache size (MB)"
+msgid "Content budget (MB)"
 msgstr ""
 
 #: extension/prefs.js:34
-msgid "Maximum total size of persisted history"
+msgid "Includes pinned content. Existing pins survive a lower limit."
 msgstr ""
 
 #: extension/prefs.js:41
@@ -106,105 +190,130 @@ msgid "Simulate a paste keypress after picking an entry"
 msgstr ""
 
 #: extension/prefs.js:57
+msgid "Paste key combination"
+msgstr ""
+
+#: extension/prefs.js:58
+msgid "Application-dependent. Terminals commonly use Ctrl+Shift+V."
+msgstr ""
+
+#: extension/prefs.js:68
 msgid "Stop recording clipboard contents until turned off"
 msgstr ""
 
-#: extension/prefs.js:63
+#: extension/prefs.js:74
 msgid "Notify on copy"
 msgstr ""
 
-#: extension/prefs.js:64
+#: extension/prefs.js:75
 msgid "Show an OSD when new content is recorded"
 msgstr ""
 
-#: extension/prefs.js:70
+#: extension/prefs.js:81
 msgid "Confirm clear"
 msgstr ""
 
-#: extension/prefs.js:71
-msgid "Require a second click before wiping history"
+#: extension/prefs.js:82
+msgid "Ask before clearing history from menus or shortcuts"
 msgstr ""
 
-#: extension/prefs.js:77
+#: extension/prefs.js:88
 msgid "Strip text"
 msgstr ""
 
-#: extension/prefs.js:78
+#: extension/prefs.js:89
 msgid "Trim whitespace from copied text"
 msgstr ""
 
-#: extension/prefs.js:84
+#: extension/prefs.js:95
 msgid "Move item first"
 msgstr ""
 
-#: extension/prefs.js:85
+#: extension/prefs.js:96
 msgid "Selected entries jump to the top of history"
 msgstr ""
 
-#: extension/prefs.js:91
+#: extension/prefs.js:102
 msgid "Cache only favorites"
 msgstr ""
 
-#: extension/prefs.js:92
-msgid "Only pinned entries survive a restart"
+#: extension/prefs.js:103
+msgid ""
+"New unpinned text and images stay in memory. Existing cache is rewritten."
 msgstr ""
 
-#: extension/prefs.js:98
+#: extension/prefs.js:109
 msgid "Enable keybindings"
 msgstr ""
 
-#: extension/prefs.js:99
+#: extension/prefs.js:110
 msgid "Master switch for all shortcuts"
 msgstr ""
 
-#: extension/prefs.js:105
+#: extension/prefs.js:116
 msgid "Typeahead search"
 msgstr ""
 
-#: extension/prefs.js:106
+#: extension/prefs.js:117
 msgid "Filter history as you type in the popup"
 msgstr ""
 
-#: extension/prefs.js:112
+#: extension/prefs.js:123
 msgid "Track primary selection"
 msgstr ""
 
-#: extension/prefs.js:113
+#: extension/prefs.js:124
 msgid "Record text selected with the mouse, not just copied"
 msgstr ""
 
-#: extension/prefs.js:119
-msgid "Ignore password-manager contents"
-msgstr ""
-
-#: extension/prefs.js:120
-msgid "Skip clipboard contents flagged by password managers"
-msgstr ""
-
-#: extension/prefs.js:125
-msgid "Keyboard shortcuts"
-msgstr ""
-
 #: extension/prefs.js:130
-msgid "empty disables"
+msgid "Expire unpinned entries after hours"
+msgstr ""
+
+#: extension/prefs.js:131
+msgid "Zero disables expiry. Favorites are kept."
+msgstr ""
+
+#: extension/prefs.js:138
+msgid "Excluded application IDs (comma-separated)"
 msgstr ""
 
 #: extension/prefs.js:146
-msgid "Popup at pointer"
+msgid "Password-manager hints are always respected"
 msgstr ""
 
 #: extension/prefs.js:147
+msgid ""
+"Unmarked secrets cannot be detected. Use private mode or exclude their "
+"application."
+msgstr ""
+
+#: extension/prefs.js:151
+msgid "Keyboard shortcuts"
+msgstr ""
+
+#: extension/prefs.js:152
+msgid ""
+"Shortcuts are opt-in. Enter GTK notation such as &lt;Super&gt;v for Win+V-"
+"style access; this may conflict with GNOME notifications."
+msgstr ""
+
+#: extension/prefs.js:158
+msgid "empty disables"
+msgstr ""
+
+#: extension/prefs.js:182
+msgid "Popup at pointer"
+msgstr ""
+
+#: extension/prefs.js:183
 msgid "Next entry (older)"
 msgstr ""
 
-#: extension/prefs.js:148
+#: extension/prefs.js:184
 msgid "Previous entry (newer)"
 msgstr ""
 
-#: extension/prefs.js:149
+#: extension/prefs.js:185
 msgid "Toggle private mode"
-msgstr ""
-
-#: extension/prefs.js:150
-msgid "Clear history"
 msgstr ""

@@ -10,7 +10,7 @@
         <key name="paste-on-select" type="b">
             <default>true</default>
             <summary>Paste on select</summary>
-            <description>After picking an entry, simulate a paste keypress (Shift+Insert) in the focused window. When off, the entry is only placed on the clipboard.</description>
+            <description>After picking an entry, simulate the configured paste keypress only if the original window remains focused. When off, the entry is only placed on the clipboard.</description>
         </key>
         <key name="private-mode" type="b">
             <default>false</default>
@@ -25,7 +25,7 @@
         <key name="confirm-clear" type="b">
             <default>true</default>
             <summary>Confirm clear</summary>
-            <description>Require a second click on Clear history before entries are wiped.</description>
+            <description>Show a confirmation dialog before clearing unpinned history from either menu or a shortcut.</description>
         </key>
         <key name="strip-text" type="b">
             <default>false</default>
@@ -43,17 +43,17 @@
             <description>Only pinned entries are written to disk; unpinned history is lost on restart.</description>
         </key>
         <key name="popup-shortcut" type="as">
-            <default><![CDATA[['<Super>v']]]></default>
+            <default>[]</default>
             <summary>Popup shortcut</summary>
             <description>Keyboard shortcut that opens the clipboard popup at the pointer. Empty disables it.</description>
         </key>
         <key name="next-entry" type="as">
-            <default><![CDATA[['<Ctrl><Super>v']]]></default>
+            <default>[]</default>
             <summary>Next entry shortcut</summary>
             <description>Cycle the clipboard to the next older history entry. Empty disables it.</description>
         </key>
         <key name="prev-entry" type="as">
-            <default><![CDATA[['<Ctrl><Super>b']]]></default>
+            <default>[]</default>
             <summary>Previous entry shortcut</summary>
             <description>Cycle the clipboard back to the previous newer history entry. Empty disables it.</description>
         </key>
@@ -77,10 +77,26 @@
             <summary>Track primary selection</summary>
             <description>Also record the PRIMARY selection (text selected with the mouse) into history.</description>
         </key>
-        <key name="ignore-password-mimes" type="b">
-            <default>true</default>
-            <summary>Ignore password-manager contents</summary>
-            <description>Skip clipboard contents flagged by password managers.</description>
+        <key name="excluded-apps" type="as">
+            <default>[]</default>
+            <summary>Excluded applications</summary>
+            <description>Desktop application IDs or window classes whose clipboard contents are not recorded while focused.</description>
+        </key>
+        <key name="expire-hours" type="i">
+            <default>0</default>
+            <range min="0" max="8760"/>
+            <summary>Expire unpinned entries after hours</summary>
+            <description>Remove old unpinned entries at startup and within a minute of expiry. Zero disables expiry.</description>
+        </key>
+        <key name="paste-shortcut" type="s">
+            <default>'ctrl-v'</default>
+            <choices>
+                <choice value="ctrl-v"/>
+                <choice value="ctrl-shift-v"/>
+                <choice value="shift-insert"/>
+            </choices>
+            <summary>Paste accelerator</summary>
+            <description>Key combination simulated for automatic paste. Application support varies; terminals commonly use Ctrl+Shift+V.</description>
         </key>
         <key name="toggle-private-mode" type="as">
             <default><![CDATA[[]]]></default>
@@ -91,7 +107,7 @@
             <default>10</default>
             <range min="1" max="100"/>
             <summary>Cache size (MB)</summary>
-            <description>Maximum total size of persisted clipboard history. Oldest unpinned entries are evicted when exceeded.</description>
+            <description>Content budget for text and PNG bytes in memory and on disk. Pinned content counts toward this budget. Existing pins are kept if the budget is lowered; new entries are rejected until space is available.</description>
         </key>
         <key name="max-displayed-entries" type="i">
             <default>50</default>

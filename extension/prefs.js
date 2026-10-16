@@ -30,8 +30,8 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         group.add(displayRow);
 
         const cacheSizeRow = new Adw.SpinRow({
-            title: _('Cache size (MB)'),
-            subtitle: _('Maximum total size of persisted history'),
+            title: _('Content budget (MB)'),
+            subtitle: _('Includes pinned content. Existing pins survive a lower limit.'),
             adjustment: new Gtk.Adjustment({lower: 1, upper: 100, step_increment: 1}),
         });
         settings.bind('cache-size', cacheSizeRow, 'value', Gio.SettingsBindFlags.DEFAULT);
@@ -52,6 +52,17 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         settings.bind('paste-on-select', pasteRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(pasteRow);
 
+        const pasteModes = ['ctrl-v', 'ctrl-shift-v', 'shift-insert'];
+        const pasteModeRow = new Adw.ComboRow({
+            title: _('Paste key combination'),
+            subtitle: _('Application-dependent. Terminals commonly use Ctrl+Shift+V.'),
+            model: Gtk.StringList.new(['Ctrl+V', 'Ctrl+Shift+V', 'Shift+Insert']),
+            selected: Math.max(0, pasteModes.indexOf(settings.get_string('paste-shortcut'))),
+        });
+        pasteModeRow.connect('notify::selected', () =>
+            settings.set_string('paste-shortcut', pasteModes[pasteModeRow.selected]));
+        group.add(pasteModeRow);
+
         const privateRow = new Adw.SwitchRow({
             title: _('Private mode'),
             subtitle: _('Stop recording clipboard contents until turned off'),
@@ -68,7 +79,7 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
 
         const confirmRow = new Adw.SwitchRow({
             title: _('Confirm clear'),
-            subtitle: _('Require a second click before wiping history'),
+            subtitle: _('Ask before clearing history from menus or shortcuts'),
         });
         settings.bind('confirm-clear', confirmRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(confirmRow);
@@ -89,7 +100,7 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
 
         const cacheRow = new Adw.SwitchRow({
             title: _('Cache only favorites'),
-            subtitle: _('Only pinned entries survive a restart'),
+            subtitle: _('New unpinned text and images stay in memory. Existing cache is rewritten.'),
         });
         settings.bind('cache-only-favorites', cacheRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cacheRow);
@@ -115,14 +126,31 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
         settings.bind('process-primary-selection', primaryRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(primaryRow);
 
-        const mimeRow = new Adw.SwitchRow({
-            title: _('Ignore password-manager contents'),
-            subtitle: _('Skip clipboard contents flagged by password managers'),
+        const expiryRow = new Adw.SpinRow({
+            title: _('Expire unpinned entries after hours'),
+            subtitle: _('Zero disables expiry. Favorites are kept.'),
+            adjustment: new Gtk.Adjustment({lower: 0, upper: 8760, step_increment: 1}),
         });
-        settings.bind('ignore-password-mimes', mimeRow, 'active', Gio.SettingsBindFlags.DEFAULT);
-        group.add(mimeRow);
+        settings.bind('expire-hours', expiryRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+        group.add(expiryRow);
 
-        const keysGroup = new Adw.PreferencesGroup({title: _('Keyboard shortcuts')});
+        const excludedRow = new Adw.EntryRow({
+            title: _('Excluded application IDs (comma-separated)'),
+            show_apply_button: true,
+            text: settings.get_strv('excluded-apps').join(', '),
+        });
+        excludedRow.connect('apply', () => settings.set_strv('excluded-apps',
+            [...new Set(excludedRow.text.split(',').map(id => id.trim()).filter(Boolean))]));
+        group.add(excludedRow);
+        group.add(new Adw.ActionRow({
+            title: _('Password-manager hints are always respected'),
+            subtitle: _('Unmarked secrets cannot be detected. Use private mode or exclude their application.'),
+        }));
+
+        const keysGroup = new Adw.PreferencesGroup({
+            title: _('Keyboard shortcuts'),
+            description: _('Shortcuts are opt-in. Enter GTK notation such as &lt;Super&gt;v for Win+V-style access; this may conflict with GNOME notifications.'),
+        });
         page.add(keysGroup);
 
         const makeShortcutRow = (key, title) => {
@@ -133,12 +161,20 @@ export default class ClipboardPopupPreferences extends ExtensionPreferences {
             });
             row.connect('apply', () => {
                 const accel = row.text.trim();
-                if (accel && !Gtk.accelerator_parse(accel)[0]) {
+                const [valid, keyval, modifiers] = Gtk.accelerator_parse(accel);
+                const canonical = valid ? Gtk.accelerator_name(keyval, modifiers) : '';
+                const duplicate = ['popup-shortcut', 'next-entry', 'prev-entry', 'toggle-private-mode', 'clear-history']
+                    .some(other => other !== key && settings.get_strv(other).some(value => {
+                        const [parsed, otherKey, otherMods] = Gtk.accelerator_parse(value);
+                        return parsed && Gtk.accelerator_name(otherKey, otherMods) === canonical;
+                    }));
+                if (accel && (!valid || !modifiers || !Gtk.accelerator_valid(keyval, modifiers) || duplicate)) {
                     row.add_css_class('error');
                     return;
                 }
                 row.remove_css_class('error');
-                settings.set_strv(key, accel ? [accel] : []);
+                settings.set_strv(key, accel ? [canonical] : []);
+                row.text = accel ? canonical : '';
             });
             keysGroup.add(row);
         };

@@ -4,8 +4,8 @@ Guidance for AI coding agents working in this repository.
 
 ## Project Overview
 
-**Clipboard Popup** - a GNOME Shell extension implementing the Windows PowerToys
-Win+V clipboard history experience: Super+V opens a context-menu-style popup at
+**Clipboard Popup** - a GNOME Shell extension implementing a Windows-style
+clipboard history experience: an opt-in shortcut opens a context-menu-style popup at
 the mouse pointer listing clipboard history (text + PNG images), with pinning,
 per-entry delete, clear-keeps-pinned, persistence, and paste-on-select via a
 simulated Ctrl+V.
@@ -17,7 +17,11 @@ simulated Ctrl+V.
 
 ```
 extension/extension.js   # hotkey, popup at pointer, clipboard watch, paste inject
-extension/history.js     # entry storage: pin/delete/clear/trim, JSON persistence
+extension/history.js     # validated history model, limits, deduplication, serialized snapshots
+extension/storage.js     # asynchronous private files, bounded reads, image cleanup
+extension/capture.js     # cancellable bounded clipboard transfers and secret hints
+extension/actions.js     # clipboard selection, paste, caret tracking, dialogs
+extension/menu.js        # independent popup/panel views, search, keyboard controls
 extension/prefs.js       # Adw preferences window (GTK 4)
 extension/schemas/       # GSettings schema
 .github/workflows/ci.yml # schema check, node --check, Shexli review gate
@@ -39,9 +43,8 @@ Makefile                 # pack / install / nested (throwaway shell for testing)
   literals. Translations live in `po/`; `make pot` regenerates the POT and
   `make pack` compiles `.po` files into `extension/locale/`. When the first
   `.po` is added, also add `"gettext-domain": "clipboard-popup"` to
-  metadata.json - it is omitted for now because shexli 0.2.1 crashes on it.
-  Also note: shexli 0.2.1's parser segfaults on multi-line ternaries that
-  return array literals - keep such ternaries on one line.
+  metadata.json. Shexli 0.2.1 crashes with tree-sitter 0.26.0; use the CI-pinned
+  tree-sitter 0.25.2 and tree-sitter-javascript 0.25.0 without disabling rules.
 - **No em dashes** anywhere - use `-`.
 - **Clipboard access is declared** in `metadata.json` description; keep that
   sentence accurate if behavior changes.
@@ -54,6 +57,8 @@ Makefile                 # pack / install / nested (throwaway shell for testing)
 make pack     # build dist/*.shell-extension.zip
 make install  # install + pack for the current user (log out/in to enable)
 make nested   # run extension/ in a throwaway GNOME Shell session
+make check    # Node.js 22+ regression tests, real GJS persistence tests, schema/syntax checks
+make smoke    # isolated headless Shell + GTK client: capture, menus, paste, lifecycle, preferences
 
 # local CI equivalent:
 glib-compile-schemas --strict --dry-run extension/schemas
@@ -69,5 +74,20 @@ when declared (clipboard access).
 - Commits: plain sentence-case titles, no co-author trailers.
 - History entries: `{id, kind: 'text'|'image', text?, imageFile?, imgHash?,
   pinned, timestamp}`; `_bytes` is runtime-only and stripped on save.
-- Only the newest image keeps `_bytes` in memory; `imgHash` dedupes across the
-  whole history including persisted entries.
+- Image `_bytes` stay in the bounded in-memory cache so favorites-only mode
+  never needs to write unpinned images and selection cannot race disk reads.
+- The payload budget includes pins. Existing pins survive lowering the limit;
+  new entries are refused when pins leave insufficient space. Hard cap: 200 pins.
+- Native cursor tracking uses `Main.inputMethod` and IBus signals, not AT-SPI
+  synchronous queries. Keep the pointer/focused-window fallback.
+- Clipboard shortcuts ship unassigned, in line with the current review rules.
+- Node 14 may precede the system Node on PATH. Locally use
+  `make check NODE=/usr/bin/node` when necessary (the system Node is 22).
+- Smoke-test helpers stay under `tests/` and must never be included in the ZIP.
+- Prepare the virtual keyboard before the first paste. A headless Wayland client
+  needs time to bind the new keyboard capability; creating it at injection time
+  can drop the first paste. The smoke test covers this with a real GTK client.
+- Release modal grabs explicitly before destroying dialogs, and never inject
+  paste while another system modal is active.
+- Adw preference-group descriptions use markup. Escape accelerator examples
+  such as `&lt;Super&gt;v` rather than inserting literal angle brackets.

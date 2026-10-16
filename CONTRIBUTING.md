@@ -15,7 +15,9 @@ Open an [issue](https://github.com/imshaaz21/clipboard-popup-gnome/issues/new/ch
 ```bash
 git clone https://github.com/imshaaz21/clipboard-popup-gnome.git
 cd clipboard-popup-gnome
-make nested   # runs extension/ in a throw-away GNOME Shell, your session is untouched
+make check    # Node.js 22+, GJS, and schema/syntax checks
+make smoke    # isolated headless Shell with capture, UI, paste, and preferences tests
+make nested   # interactive development Shell
 ```
 
 Preferences run in a separate process, so watch their log with `journalctl -f -o cat /usr/bin/gjs`.
@@ -25,7 +27,12 @@ Code layout:
 | File | Purpose |
 |---|---|
 | `extension/extension.js` | Hotkey, popup at pointer, clipboard watching, paste injection |
-| `extension/history.js` | History storage: pin, delete, clear, trim, persistence |
+| `extension/history.js` | History validation, pin/delete/clear/trim, serialized snapshots |
+| `extension/storage.js` | Async cache IO, permissions, bounded reads, image cleanup |
+| `extension/capture.js` | Cancellable bounded transfers and secret hints |
+| `extension/menu.js` | Search, favorites, independent popup/panel views |
+| `extension/actions.js` | Paste, native caret signals, confirmation and preview dialogs |
+| `tests/` | Node model/capture tests, GJS filesystem tests, isolated Shell/GTK smoke tests |
 | `extension/prefs.js` | Preferences window |
 | `extension/schemas/` | GSettings schema |
 

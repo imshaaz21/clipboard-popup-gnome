@@ -10,136 +10,147 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {History} from './history.js';
-import {showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste, syncPrivateIcon, trackCaret, untrackCaret} from './actions.js';
+import {Capture, excludedApplication} from './capture.js';
+import {
+    showOsd, setClipboardEntry, cycleEntry, togglePrivateMode, sendPaste, preparePaste,
+    syncPrivateIcon, trackCaret, untrackCaret, confirmClear, closeDialog,
+} from './actions.js';
 import {rebuildMenu, rebuildPanelMenu, releaseMenu} from './menu.js';
-
-const CLIP = St.ClipboardType.CLIPBOARD;
-const PASTE_DELAY_MS = 60;
 
 export default class ClipboardPopupExtension extends Extension {
     enable() {
         this._settings = this.getSettings();
-        this._history = new History();
-        this._suppressCapture = false;
+        this._signals = [];
+        this._timeoutIds = new Set();
+        this._session = {};
+        this._settingClipboard = false;
+        this._selectionSerial = 0;
+        this._cycleIndex = null;
+        this._favoritesOnly = false;
+        if (this._settings.get_boolean('paste-on-select'))
+            preparePaste(this);
+        this._history = new History(this._historyOptions());
+        this._history.onChanged = () => this._refreshMenus();
+        this._history.onError = () => {
+            if (!this._storageErrorShown) {
+                this._storageErrorShown = true;
+                showOsd('dialog-warning-symbolic', _('Clipboard history could not be saved or loaded'));
+            }
+        };
 
         // Invisible anchor moved to the pointer so the menu opens like a context menu.
         this._anchor = new St.Widget({reactive: false, opacity: 0, width: 1, height: 1});
         Main.uiGroup.add_child(this._anchor);
-
         this._menu = new PopupMenu.PopupMenu(this._anchor, 0.5, St.Side.TOP);
         Main.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
-        this._indicator = new PanelMenu.Button(0, this.metadata.name, true);
-        this._indicatorIcon = new St.Icon({style_class: 'system-status-icon'});
-        this._indicator.add_child(this._indicatorIcon);
-        this._indicatorSignalId = this._indicator.connect('button-press-event', (_a, event) => {
-            if (event.get_button() === 3) {
-                togglePrivateMode(this);
-                return Clutter.EVENT_STOP;
-            }
-            if (event.get_button() === 1) {
-                rebuildPanelMenu(this);
-                this._indicator.menu.isOpen
-                    ? this._indicator.menu.close()
-                    : this._indicator.menu.open();
-                return Clutter.EVENT_STOP;
-            }
-            return Clutter.EVENT_PROPAGATE;
-        });
-        this._panelMenuSignalId = this._indicator.menu.connect('open-state-changed', (_m, open) => {
-            if (open)
-                rebuildPanelMenu(this);
-        });
-        Main.panel.addToStatusArea(this.uuid, this._indicator);
-        this._privateSignalId = this._settings.connect('changed::private-mode',
-            () => syncPrivateIcon(this));
-        syncPrivateIcon(this);
-        this._menuSignalId = this._menu.connect('open-state-changed', (_m, open) => {
+        this._popupManager = Main.panel.menuManager;
+        this._popupManager.addMenu(this._menu);
+        this._connect(this._menu, 'open-state-changed', (_menu, open) => {
             if (!open)
                 this._parkAnchor();
         });
-        this._timeoutIds = new Set();
-        this._caretPos = null;
-        this._caretListener = null;
+
+        this._indicator = new PanelMenu.Button(0, this.metadata.name);
+        this._indicatorIcon = new St.Icon({style_class: 'system-status-icon'});
+        this._indicator.add_child(this._indicatorIcon);
+        this._connect(this._indicator, 'button-press-event', (_actor, event) => {
+            if (event.get_button() !== 3)
+                return Clutter.EVENT_PROPAGATE;
+            togglePrivateMode(this);
+            return Clutter.EVENT_STOP;
+        });
+        this._connect(this._indicator.menu, 'open-state-changed', (_menu, open) => {
+            if (open) {
+                this._menu.close();
+                this._targetWindow = global.display.focus_window;
+                rebuildPanelMenu(this);
+            }
+        });
+        Main.panel.addToStatusArea(this.uuid, this._indicator);
+        syncPrivateIcon(this);
         trackCaret(this);
 
-        this._selectionSignalId = this._connectSelectionSignal();
-        this._trimSignalId = this._settings.connect('changed::history-size',
-            () => this._trimHistory());
-        this._onlyPinnedSignalId = this._settings.connect('changed::cache-only-favorites',
-            () => (this._history.onlyPinned = this._settings.get_boolean('cache-only-favorites')));
-        this._history.onlyPinned = this._settings.get_boolean('cache-only-favorites');
-        this._cycleIndex = null;
-
+        this._selection = global.display.get_selection();
+        this._capture = new Capture(this._selection,
+            type => this._canCapture(type), (kind, value) => this._record(kind, value));
+        this._connectSelectionSignal();
+        this._connect(global.display, 'notify::focus-window', () => {
+            this._capture.cancel();
+            this._selectionSerial++;
+            this._caretPos = null;
+        });
+        this._connect(this._settings, 'changed', (_settings, key) => this._settingsChanged(key));
         this._handlers = {
             'popup-shortcut': () => this._openPopup(),
             'next-entry': () => cycleEntry(this, 1),
             'prev-entry': () => cycleEntry(this, -1),
             'toggle-private-mode': () => togglePrivateMode(this),
-            'clear-history': () => { this._history.clear(); showOsd('edit-delete-symbolic', _('History cleared')); },
+            'clear-history': () => confirmClear(this),
         };
-        this._keybindings = Object.keys(this._handlers);
+        this._boundKeys = [];
         this._bindKeybindings();
-        this._keybindSignalId = this._settings.connect('changed::enable-keybindings',
-            () => this._bindKeybindings());
+        this._scheduleExpiry();
+        rebuildPanelMenu(this);
+        const session = this._session;
+        this._history.ready.then(() => {
+            if (this._session === session && this._history.isReady)
+                this._capture.changed(Meta.SelectionType.SELECTION_CLIPBOARD);
+        });
     }
 
     disable() {
-        if (this._bound) {
-            for (const key of this._keybindings)
-                Main.wm.removeKeybinding(key);
-        }
-        this._bound = false;
-        this._keybindings = null;
+        this._session = null;
+        this._capture?.destroy();
+        this._capture = null;
+        for (const key of this._boundKeys ?? [])
+            Main.wm.removeKeybinding(key);
+        this._boundKeys = null;
         this._handlers = null;
-        if (this._keybindSignalId)
-            this._settings?.disconnect(this._keybindSignalId);
-        this._keybindSignalId = 0;
-        if (this._onlyPinnedSignalId)
-            this._settings?.disconnect(this._onlyPinnedSignalId);
-        this._onlyPinnedSignalId = 0;
-        if (this._selectionSignalId)
-            this._selection?.disconnect(this._selectionSignalId);
-        this._selectionSignalId = 0;
-        this._selection = null;
-        if (this._trimSignalId)
-            this._settings?.disconnect(this._trimSignalId);
-        this._trimSignalId = 0;
+        for (const [object, id] of this._signals ?? [])
+            object.disconnect(id);
+        this._signals = null;
+        this._cancelExpiry();
         for (const id of this._timeoutIds ?? [])
             GLib.Source.remove(id);
-        this._timeoutIds?.clear();
         this._timeoutIds = null;
+        this._expiryId = 0;
         untrackCaret(this);
-        if (this._menuSignalId)
-            this._menu?.disconnect(this._menuSignalId);
-        this._menuSignalId = 0;
-        if (this._privateSignalId)
-            this._settings?.disconnect(this._privateSignalId);
-        this._privateSignalId = 0;
-        if (this._panelMenuSignalId)
-            this._indicator?.menu?.disconnect(this._panelMenuSignalId);
-        this._panelMenuSignalId = 0;
-        if (this._indicatorSignalId)
-            this._indicator?.disconnect(this._indicatorSignalId);
-        this._indicatorSignalId = 0;
+        closeDialog(this);
+        this._menu?.close();
+        this._indicator?.menu.close();
+        releaseMenu(this);
+        if (this._menu)
+            this._popupManager?.removeMenu(this._menu);
+        this._popupManager = null;
+        this._menu?.destroy();
+        this._menu = null;
         this._indicatorIcon?.destroy();
         this._indicatorIcon = null;
         this._indicator?.destroy();
         this._indicator = null;
-        releaseMenu(this);
-        this._menu?.destroy();
-        this._menu = null;
         this._anchor?.destroy();
         this._anchor = null;
         this._history?.finalize();
         this._history = null;
+        this._selection = null;
         this._device = null;
         this._settings = null;
+        this._targetWindow = null;
+        this._cycleIndex = null;
+        this._storageErrorShown = false;
+        this._settingClipboard = false;
+        this._selectionSerial = 0;
+        this._favoritesOnly = false;
+    }
+
+    _connect(object, signal, handler) {
+        this._signals.push([object, object.connect(signal, handler)]);
     }
 
     _later(ms, fn) {
         if (!this._timeoutIds)
-            return;
+            return 0;
         const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
             this._timeoutIds.delete(id);
             fn();
@@ -148,118 +159,176 @@ export default class ClipboardPopupExtension extends Extension {
         this._timeoutIds.add(id);
     }
 
-    _connectSelectionSignal() {
-        try {
-            this._selection = global.display.get_selection();
-            return this._selection.connect('owner-changed',
-                (_sel, selType) => this._onSelectionChanged(selType));
-        } catch (e) {
-            console.error(`clipboard-popup: no selection signal: ${e.message}`);
-            return 0;
+    _refreshMenus() {
+        if (this._menu?.isOpen)
+            this._popupView?.refresh();
+        if (this._indicator?.menu.isOpen)
+            this._panelView?.refresh();
+    }
+
+    _historyOptions() {
+        return {
+            maxEntries: this._settings.get_int('history-size'),
+            maxBytes: this._settings.get_int('cache-size') * 1024 * 1024,
+            maxAgeMs: this._settings.get_int('expire-hours') * 3600000,
+            onlyPinned: this._settings.get_boolean('cache-only-favorites'),
+        };
+    }
+
+    _settingsChanged(key) {
+        this._capture.cancel();
+        this._selectionSerial++;
+        if (['history-size', 'cache-size', 'expire-hours', 'cache-only-favorites'].includes(key)) {
+            this._history.configure(this._historyOptions());
+            this._scheduleExpiry();
+        }
+        if (key === 'enable-keybindings' || Object.hasOwn(this._handlers, key))
+            this._bindKeybindings();
+        if (key === 'private-mode')
+            syncPrivateIcon(this);
+        if (key === 'paste-on-select' && this._settings.get_boolean(key))
+            preparePaste(this);
+        this._menu.close();
+        this._indicator.menu.close();
+    }
+
+    _cancelExpiry() {
+        if (this._expiryId) {
+            GLib.Source.remove(this._expiryId);
+            this._expiryId = 0;
         }
     }
 
-    _onSelectionChanged(selType) {
-        const clip = selType === Meta.SelectionType.SELECTION_CLIPBOARD;
-        const primary = selType === Meta.SelectionType.SELECTION_PRIMARY;
-        if ((!clip && !(primary && this._settings.get_boolean('process-primary-selection'))) ||
-            this._suppressCapture || this._settings.get_boolean('private-mode'))
-            return;
-        const clipboard = St.Clipboard.get_default();
-        // Skip secrets flagged by password managers.
-        if (clip && this._settings.get_boolean('ignore-password-mimes') &&
-            (clipboard.get_mimetypes(CLIP) ?? []).includes('x-kde-passwordManagerHint'))
-            return;
-        const target = clip ? CLIP : St.ClipboardType.PRIMARY;
-        clipboard.get_text(target, (_cb, text) => {
-            if (!this._history)
-                return;
-            if (this._settings.get_boolean('strip-text') && text)
-                text = text.trim();
-            if (text && text.trim()) {
-                const entry = this._history.addText(text);
-                if (entry) {
-                    this._cycleIndex = null;
-                    this._trimHistory();
-                    if (this._settings.get_boolean('notify-on-copy'))
-                        showOsd('edit-copy-symbolic', _('Copied to history'));
-                }
-                return;
-            }
-            if (!clip)
-                return;
-            clipboard.get_content(CLIP, 'image/png', (_cb2, bytes) => {
-                if (bytes && this._history) {
-                    if (this._history.addImage(bytes)) {
-                        this._cycleIndex = null;
-                        this._trimHistory();
-                        if (this._settings.get_boolean('notify-on-copy'))
-                            showOsd('image-x-generic-symbolic', _('Image copied to history'));
-                    }
-                }
+    _scheduleExpiry() {
+        this._cancelExpiry();
+        if (this._settings.get_int('expire-hours') > 0) {
+            this._expiryId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60, () => {
+                this._history.trim();
+                this._refreshMenus();
+                return GLib.SOURCE_CONTINUE;
             });
+        }
+    }
+
+    _connectSelectionSignal() {
+        this._connect(this._selection, 'owner-changed', (_selection, type) => {
+            if (type === Meta.SelectionType.SELECTION_CLIPBOARD)
+                this._selectionSerial++;
+            this._capture.changed(type);
         });
     }
 
-    _trimHistory() {
-        this._history.trim(this._settings.get_int('history-size'),
-            this._settings.get_int('cache-size') << 20);
+    _canCapture(type) {
+        if (!this._history?.isReady || this._settingClipboard ||
+            this._settings.get_boolean('private-mode') || Main.sessionMode.isLocked)
+            return false;
+        if (type === Meta.SelectionType.SELECTION_PRIMARY &&
+            !this._settings.get_boolean('process-primary-selection'))
+            return false;
+        // Skip secrets flagged by password managers in both clipboard selections.
+        const window = global.display.focus_window;
+        const app = window ? Shell.WindowTracker.get_default().get_window_app(window) : null;
+        return !excludedApplication(this._settings.get_strv('excluded-apps'),
+            [app?.get_id(), window?.get_wm_class()]);
+    }
+
+    _record(kind, value) {
+        if (kind === 'text' && this._settings.get_boolean('strip-text'))
+            value = value.trim();
+        const entry = kind === 'text' ? this._history.addText(value) : this._history.addImage(value);
+        if (!entry)
+            return;
+        this._cycleIndex = null;
+        if (this._settings.get_boolean('notify-on-copy'))
+            showOsd('edit-copy-symbolic', _('Copied to history'));
     }
 
     _bindKeybindings() {
-        if (this._bound) {
-            for (const key of this._keybindings)
-                Main.wm.removeKeybinding(key);
-        }
-        this._bound = false;
-        if (!this._settings?.get_boolean('enable-keybindings'))
+        for (const key of this._boundKeys)
+            Main.wm.removeKeybinding(key);
+        this._boundKeys = [];
+        if (!this._settings.get_boolean('enable-keybindings'))
             return;
-        this._bound = true;
-        for (const key of this._keybindings)
-            Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE,
-                Shell.ActionMode.NORMAL, this._handlers[key]);
+        for (const [key, handler] of Object.entries(this._handlers)) {
+            if (!this._settings.get_strv(key).length)
+                continue;
+            if (Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE,
+                Shell.ActionMode.NORMAL, handler) !== Meta.KeyBindingAction.NONE)
+                this._boundKeys.push(key);
+        }
     }
 
     _openPopup() {
+        if (this._menu.isOpen) {
+            this._menu.close();
+            return;
+        }
+        this._indicator.menu.close();
         const [x, y] = global.get_pointer();
         let px = x, py = y;
         const focus = global.display.focus_window;
-        const caret = this._caretPos;
-        if (focus && caret && caret.width >= 0) {
-            const r = focus.get_frame_rect();
-            if (caret.x >= r.x && caret.x <= r.x + r.width &&
-                caret.y >= r.y && caret.y <= r.y + r.height) {
+        this._targetWindow = focus;
+        if (focus) {
+            const frame = focus.get_frame_rect();
+            const caret = this._caretPos;
+            if (caret?.window === focus && caret.frameX === frame.x && caret.frameY === frame.y &&
+                caret.x >= frame.x && caret.x <= frame.x + frame.width &&
+                caret.y >= frame.y && caret.y + caret.height <= frame.y + frame.height) {
                 px = caret.x;
                 py = caret.y + caret.height + 4;
-            } else {
-                px = r.x + Math.round(r.width / 2);
-                py = r.y + Math.round(r.height / 4);
-            }
-        } else if (focus) {
-            const r = focus.get_frame_rect();
-            if (x < r.x || x > r.x + r.width || y < r.y || y > r.y + r.height) {
-                px = r.x + Math.round(r.width / 2);
-                py = r.y + Math.round(r.height / 4);
+            } else if (x < frame.x || x > frame.x + frame.width || y < frame.y || y > frame.y + frame.height) {
+                px = frame.x + Math.round(frame.width / 2);
+                py = frame.y + Math.round(frame.height / 4);
             }
         }
-        this._anchor.set_position(Math.max(0, px), Math.max(0, py));
+        const monitor = Main.layoutManager.monitors.find(m =>
+            px >= m.x && px < m.x + m.width && py >= m.y && py < m.y + m.height) ??
+            Main.layoutManager.primaryMonitor;
+        if (!monitor)
+            return;
+        this._anchor.set_position(
+            Math.max(monitor.x, Math.min(px, monitor.x + monitor.width - 1)),
+            Math.max(monitor.y, Math.min(py, monitor.y + monitor.height - 1)));
+        this._history.trim();
         rebuildMenu(this);
         this._menu.open();
     }
 
-    _selectEntry(entry) {
-        const clipboard = St.Clipboard.get_default();
-        this._suppressCapture = true;
-        this._later(PASTE_DELAY_MS * 4, () => {
-            this._suppressCapture = false;
-        });
-        if (this._settings.get_boolean('move-item-first'))
+    _selectEntry(entry, paste = this._settings.get_boolean('paste-on-select'), reorder = true) {
+        if (!this._history.entries.some(e => e.id === entry.id))
+            return;
+        const target = this._targetWindow;
+        this._menu.close();
+        this._indicator.menu.close();
+        this._capture.cancel();
+        this._settingClipboard = true;
+        try {
+            setClipboardEntry(entry, St.Clipboard.get_default());
+        } finally {
+            this._settingClipboard = false;
+        }
+        if (reorder && this._settings.get_boolean('move-item-first'))
             this._history.moveFirst(entry.id);
+        if (paste && target)
+            this._waitToPaste(target, this._selectionSerial, 0);
+    }
 
-        setClipboardEntry(entry, clipboard);
-
-        if (this._settings.get_boolean('paste-on-select'))
-            this._later(PASTE_DELAY_MS, () => sendPaste(this));
+    _waitToPaste(target, serial, attempt) {
+        this._later(25, () => {
+            if (global.display.focus_window !== target || serial !== this._selectionSerial ||
+                this._menu.isOpen || this._indicator.menu.isOpen || this._dialog || Main.modalCount > 0 ||
+                Main.sessionMode.isLocked || Main.overview.visible)
+                return;
+            const modifiers = global.get_pointer()[2] &
+                (Clutter.ModifierType.SHIFT_MASK | Clutter.ModifierType.CONTROL_MASK |
+                 Clutter.ModifierType.MOD1_MASK | Clutter.ModifierType.SUPER_MASK);
+            if (modifiers || global.stage.get_key_focus()) {
+                if (attempt < 20)
+                    this._waitToPaste(target, serial, attempt + 1);
+                return;
+            }
+            sendPaste(this);
+        });
     }
 
     _parkAnchor() {

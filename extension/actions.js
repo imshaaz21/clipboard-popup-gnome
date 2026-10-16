@@ -1,59 +1,43 @@
-import Atspi from 'gi://Atspi';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as IBusManager from 'resource:///org/gnome/shell/misc/ibusManager.js';
+import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 
 import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 const CLIP = St.ClipboardType.CLIPBOARD;
-const PASTE_DELAY_MS = 60;
 
-// Evdev keycodes for Shift+Insert - the paste accelerator every app accepts, terminals included.
+// Evdev keycodes for selectable paste accelerators; application support varies.
 const KEY_SHIFT_L = 42;
 const KEY_INSERT = 110;
+const KEY_CTRL_L = 29;
+const KEY_V = 47;
 
 export function showOsd(iconName, label) {
-    Main.osdWindowManager.show(0, new St.Icon({icon_name: iconName}), label, null);
+    Main.osdWindowManager.show(Main.layoutManager.focusIndex,
+        new St.Icon({icon_name: iconName}), label, null);
 }
 
 export function setClipboardEntry(entry, clipboard) {
-    if (entry.kind !== 'image') {
-        clipboard.set_text(CLIP, entry.text);
-        return;
-    }
-    if (entry._bytes) {
+    if (entry.kind === 'image')
         clipboard.set_content(CLIP, 'image/png', entry._bytes);
-        return;
-    }
-    Gio.File.new_for_path(entry.imageFile).load_contents_async(null, (file, res) => {
-        try {
-            const [ok, data] = file.load_contents_finish(res);
-            if (ok)
-                clipboard.set_content(CLIP, 'image/png', new GLib.Bytes(data));
-        } catch (e) {
-            console.error(`clipboard-popup: ${e.message}`);
-        }
-    });
+    else
+        clipboard.set_text(CLIP, entry.text);
 }
 
 export function cycleEntry(ext, dir) {
-    if (!ext._history || !ext._settings)
+    const entries = ext._history?.entries;
+    if (!entries?.length)
         return;
-    const entries = ext._history.entries;
-    if (entries.length === 0)
-        return;
-    ext._cycleIndex = ext._cycleIndex === null ? (dir > 0 ? 0 : 1) : ext._cycleIndex + dir;
-    ext._cycleIndex = Math.max(0, Math.min(ext._cycleIndex, entries.length - 1));
-    const entry = entries[ext._cycleIndex];
-    ext._suppressCapture = true;
-    ext._later(PASTE_DELAY_MS * 4, () => { ext._suppressCapture = false; });
-    setClipboardEntry(entry, St.Clipboard.get_default());
-    const label = entry.kind === 'image' ? _('Image')
-        : entry.text.replace(/\s+/g, ' ').slice(0, ext._settings.get_int('preview-length'));
-    showOsd('edit-paste-symbolic', label);
+    ext._cycleIndex = ((ext._cycleIndex ?? 0) + dir + entries.length) % entries.length;
+    ext._targetWindow = global.display.focus_window;
+    ext._selectEntry(entries[ext._cycleIndex], false, false);
+    showOsd('edit-paste-symbolic', _('Clipboard entry selected'));
 }
 
 export function togglePrivateMode(ext) {
@@ -75,46 +59,141 @@ export function syncPrivateIcon(ext) {
 }
 
 export function trackCaret(ext) {
-    try {
-        ext._caretListener = Atspi.EventListener.new();
-        ext._caretHandler = event => {
-            try {
-                ext._caretPos = event.source.get_character_extents(
-                    event.detail1, Atspi.CoordType.SCREEN);
-            } catch (e) {
-                ext._caretPos = null;
-            }
-        };
-        ext._caretListener.register_from_callback(ext._caretHandler, 'object:text-caret-moved');
-    } catch (e) {
-        ext._caretListener = null;
-    }
+    const update = (x, y, width, height) => {
+        if (ext._menu?.isOpen || ext._indicator?.menu.isOpen || ext._dialog)
+            return;
+        const window = global.display.focus_window;
+        if (!window || ![x, y, width, height].every(Number.isFinite) || height < 0)
+            return;
+        const frame = window.get_frame_rect();
+        ext._caretPos = {window, x, y, height: Math.max(1, height), frameX: frame.x, frameY: frame.y};
+    };
+    ext._connect(Main.inputMethod, 'cursor-location-changed', (_method, rect) =>
+        update(rect.get_x(), rect.get_y(), rect.get_width(), rect.get_height()));
+    const manager = IBusManager.getIBusManager();
+    ext._connect(manager, 'set-cursor-location', (_manager, rect) => {
+        if (!Main.inputMethod.currentFocus)
+            update(rect.x, rect.y, rect.width, rect.height);
+    });
+    ext._connect(manager, 'focus-out', () => { ext._caretPos = null; });
 }
 
 export function untrackCaret(ext) {
-    if (ext._caretListener && ext._caretHandler) {
-        try {
-            ext._caretListener.deregister_from_callback(ext._caretHandler, 'object:text-caret-moved');
-        } catch (e) {
-        }
+    ext._caretPos = null;
+}
+
+export function preparePaste(ext) {
+    if (ext._device)
+        return;
+    try {
+        ext._device = Clutter.get_default_backend().get_default_seat()
+            .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+    } catch (e) {
+        console.error('clipboard-popup: virtual keyboard unavailable');
     }
-    ext._caretListener = null;
-    ext._caretHandler = null;
 }
 
 export function sendPaste(ext) {
+    const mode = ext._settings.get_string('paste-shortcut');
+    const keys = mode === 'shift-insert' ? [KEY_SHIFT_L, KEY_INSERT] : [KEY_CTRL_L, KEY_V];
+    if (mode === 'ctrl-shift-v')
+        keys.splice(1, 0, KEY_SHIFT_L);
+    const pressed = [];
+    let failure = null;
     try {
-        if (!ext._device) {
-            ext._device = Clutter.get_default_backend().get_default_seat()
-                .create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+        preparePaste(ext);
+        for (const key of keys) {
+            ext._device.notify_key(GLib.get_monotonic_time(), key, Clutter.KeyState.PRESSED);
+            pressed.push(key);
         }
-        const device = ext._device;
-        const t = Clutter.get_current_event_time() * 1000;
-        device.notify_key(t, KEY_SHIFT_L, Clutter.KeyState.PRESSED);
-        device.notify_key(t, KEY_INSERT, Clutter.KeyState.PRESSED);
-        device.notify_key(t, KEY_INSERT, Clutter.KeyState.RELEASED);
-        device.notify_key(t, KEY_SHIFT_L, Clutter.KeyState.RELEASED);
     } catch (e) {
-        console.error(`clipboard-popup: paste injection failed: ${e.message}`);
+        failure = e;
+    } finally {
+        for (const key of pressed.reverse()) {
+            try {
+                ext._device.notify_key(GLib.get_monotonic_time(), key, Clutter.KeyState.RELEASED);
+            } catch (e) {
+                failure ??= e;
+            }
+        }
     }
+    if (failure) {
+        console.error(`clipboard-popup: paste injection failed: ${failure.message}`);
+        showOsd('dialog-warning-symbolic', _('Automatic paste failed. Paste manually.'));
+    }
+}
+
+export function closeDialog(ext) {
+    ext._dialog?.popModal();
+    ext._dialog?.destroy();
+    ext._dialog = null;
+}
+
+export function confirmClear(ext) {
+    const clear = () => {
+        ext._capture.cancel();
+        ext._history.clear();
+        showOsd('edit-delete-symbolic', _('History cleared'));
+    };
+    if (!ext._settings.get_boolean('confirm-clear')) {
+        clear();
+        return;
+    }
+    ext._menu.close();
+    ext._indicator.menu.close();
+    closeDialog(ext);
+    const dialog = new ModalDialog.ModalDialog();
+    ext._dialog = dialog;
+    dialog.contentLayout.add_child(new St.Label({text: _('Clear clipboard history?')}));
+    dialog.contentLayout.add_child(new St.Label({text: _('Pinned entries will be kept. The system clipboard is unchanged.')}));
+    dialog.setButtons([
+        {label: _('Cancel'), key: Clutter.KEY_Escape, action: () => closeDialog(ext)},
+        {label: _('Clear history'), action: () => { closeDialog(ext); clear(); }},
+    ]);
+    dialog.open();
+}
+
+export function previewEntry(ext, entry) {
+    ext._menu.close();
+    ext._indicator.menu.close();
+    closeDialog(ext);
+    const dialog = new ModalDialog.ModalDialog();
+    ext._dialog = dialog;
+    const scroll = new St.ScrollView({
+        hscrollbar_policy: St.PolicyType.NEVER,
+        vscrollbar_policy: St.PolicyType.AUTOMATIC,
+        style: 'max-width: 640px; max-height: 480px;',
+    });
+    const box = new St.BoxLayout({vertical: true});
+    if (scroll.set_child)
+        scroll.set_child(box);
+    else
+        scroll.add_actor(box);
+    dialog.contentLayout.add_child(scroll);
+    let page = 0;
+    const text = entry.text ?? '';
+    const pages = text.match(/[\s\S]{1,8192}/gu) ?? [''];
+    const label = new St.Label({style: 'max-width: 600px;'});
+    label.clutter_text.line_wrap = true;
+    label.clutter_text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
+    label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+    label.clutter_text.selectable = true;
+    if (entry.kind === 'image')
+        box.add_child(new St.Icon({gicon: Gio.BytesIcon.new(entry._bytes), icon_size: 320}));
+    else
+        box.add_child(label);
+    const render = () => {
+        label.text = pages[page];
+        const buttons = [
+            {label: _('Close'), key: Clutter.KEY_Escape, action: () => closeDialog(ext)},
+            {label: _('Copy full entry'), action: () => { closeDialog(ext); ext._selectEntry(entry, false); }},
+        ];
+        if (page > 0)
+            buttons.push({label: _('Previous page'), action: () => { page--; render(); }});
+        if (page + 1 < pages.length)
+            buttons.push({label: _('Next page'), action: () => { page++; render(); }});
+        dialog.setButtons(buttons);
+    };
+    render();
+    dialog.open();
 }

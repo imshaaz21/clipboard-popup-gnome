@@ -1,6 +1,6 @@
 {
   "name": "Clipboard Popup",
-  "description": "Win+V clipboard manager for GNOME: a clipboard history popup at the mouse pointer. Text and image history, pinning, paste-on-select, private mode, and keyboard cycling - the Windows clipboard history experience for Wayland and X11. Clipboard access: reads clipboard contents to build history and writes the entry the user selects.",
+  "description": "A compact clipboard history popup near your pointer or supported text cursor. Plain text and PNG images, search, favorites, previews, private mode, application exclusions, and optional paste-on-select. Assign Super+V in preferences for Win+V-style access; shortcuts are opt-in. Clipboard access: reads clipboard and optionally primary-selection contents to build local history, writes selected entries to the clipboard, and optionally simulates a paste keypress. Password-manager hints are always respected. No network access or separate daemon.",
   "uuid": "clipboard-popup@imshaaz21.github.com",
   "shell-version": [
     "45",
@@ -11,7 +11,6 @@
     "50"
   ],
   "url": "https://github.com/imshaaz21/clipboard-popup-gnome",
-  "version": 1,
-  "version-name": "0.1.0",
+  "version-name": "1.0.0",
   "settings-schema": "org.gnome.shell.extensions.clipboard-popup"
 }

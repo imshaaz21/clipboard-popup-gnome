@@ -154,9 +154,8 @@ export default class ClipboardPopupExtension extends Extension {
 
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        const privateItem = new PopupMenu.PopupSwitchMenuItem(_('Private mode (pause recording)'),
-            this._settings.get_boolean('private-mode'));
-        privateItem.connect('toggled', (_i, on) => this._settings.set_boolean('private-mode', on));
+        const privateItem = new PopupMenu.PopupSwitchMenuItem(_('Private mode (pause recording)'), this._settings.get_boolean('private-mode'));
+        privateItem.connect('toggled', () => this._settings.set_boolean('private-mode', privateItem.state));
         this._menu.addMenuItem(privateItem);
 
         const clearItem = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
@@ -239,9 +238,7 @@ export default class ClipboardPopupExtension extends Extension {
             this._later(PASTE_DELAY_MS, () => this._sendPaste());
     }
 
-    // The PowerToys trick: the item is on the clipboard, now simulate a paste
-    // keypress in whatever window had focus before the popup grabbed it.
-    // Shift+Insert works in terminals too, unlike Ctrl+V.
+    // The PowerToys trick: simulate a paste keypress (Shift+Insert works everywhere, even terminals).
     _sendPaste() {
         try {
             // One cached device; creating one per paste leaks.

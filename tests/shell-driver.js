@@ -135,6 +135,19 @@ export default class Driver extends Extension {
         assert(pasted === entry.text,
             `native Ctrl+V paste into GTK entry: ${JSON.stringify({...pasteState, pasted})}`);
         assert((await this._client('CheckPreferences', '(b)'))[0], 'preferences construct with current schema');
+        ext._indicator.menu.open();
+        const panel = ext._panelView;
+        panel._search.text = 'no entries match this query';
+        assert(panel._rows.length === 0 && panel._search.get_parent().visible,
+            'search stays available when a query has no matches');
+        for (const item of [...ext._history.entries])
+            ext._history.remove(item.id);
+        assert(!panel._search.get_parent().visible && panel._search.text === '',
+            'empty panel history hides the search row and resets its query');
+        ext._history.addText('first entry after clearing');
+        assert(panel._search.get_parent().visible && panel._rows.length === 1,
+            'search returns when history receives a new entry');
+        ext._indicator.menu.close();
         await ext._history.whenSaved();
         ext.disable();
         await this._wait();

@@ -8,11 +8,11 @@
 
 A compact, native clipboard popup for GNOME, without a separate daemon or extra database dependencies. Search plain text and PNG history near your pointer or supported text cursor, pin useful entries, and optionally paste your selection.
 
-**Shortcuts are opt-in.** Assign `<Super>v` in preferences for Windows Win+V-style access, or use the panel icon. Super+V may conflict with GNOME's notification shortcut; choose another combination if necessary.
+**Shortcuts are opt-in.** In **Preferences > Shortcuts**, select **Open Clipboard** and press Super+V for Windows Win+V-style access, or use the panel icon. Super+V may conflict with GNOME's notification shortcut; choose another combination if necessary.
 
-| Popup at pointer |
-|:---:|
-| ![Clipboard popup](docs/popup.png) |
+[![Clipboard Popup: pointer popup and top-bar history menu](docs/screenshots/gnome-extensions-cover.png)](docs/screenshots/gnome-extensions-cover.png)
+
+[Pointer popup](docs/screenshots/pointer-popup.png) · [Top-bar menu](docs/screenshots/top-bar-menu.png) · [All screenshots](docs/screenshots/README.md)
 
 ## Features
 
@@ -72,20 +72,39 @@ Open **Preferences** in the panel menu, or run:
 gnome-extensions prefs clipboard-popup@imshaaz21.github.com
 ```
 
-- **History size:** maximum unpinned entries, 5-200 (default 25). Up to 200 favorites can be pinned.
-- **Maximum displayed entries:** 10-200 rows (default 50), applied after filtering. Refine the search to find older entries.
-- **Content budget:** default 10 MB of text and PNG payloads. Pinned entries count toward it. Existing pins survive lowering the budget; new content is refused when pins leave insufficient space. JSON/filesystem overhead and decoded thumbnail memory are additional.
+Settings are organized into **General**, **Privacy**, **Shortcuts**, and **About** pages. Use the search button to find a setting across pages. About includes the installed version, project page, and bug-report form.
+
+| General | Shortcuts |
+|:---:|:---:|
+| [![General preferences: history, popup, and paste settings](docs/screenshots/preferences-general.png)](docs/screenshots/preferences-general.png) | [![Shortcuts preferences with Super+V assigned](docs/screenshots/preferences-shortcuts.png)](docs/screenshots/preferences-shortcuts.png) |
+
+Click an action and press the keys you want to use. Super+V is assigned in these screenshots as an example; fresh installs leave shortcuts unassigned.
+
+<details>
+<summary>Privacy, About, and the shortcut editor</summary>
+
+| Privacy | About |
+|:---:|:---:|
+| [![Privacy preferences: recording, exclusions, and saved history](docs/screenshots/preferences-privacy.png)](docs/screenshots/preferences-privacy.png) | [![About: version, project page, and bug reporting](docs/screenshots/preferences-about.png)](docs/screenshots/preferences-about.png) |
+
+![Press-to-set shortcut editor](docs/screenshots/shortcut-editor.png)
+
+</details>
+
+- **History Size:** maximum unpinned entries, 5-200 (default 25). Up to 200 favorites can be pinned.
+- **Visible Entries:** 10-200 rows (default 50), applied after filtering. Refine the search to find older entries.
+- **Content Limit (MB):** default 10 MB of text and PNG payloads. Pinned entries count toward it. Existing pins survive lowering the budget; new content is refused when pins leave insufficient space. JSON/filesystem overhead and decoded thumbnail memory are additional.
 - **Entry limits:** 1 MiB UTF-8 text and 8 MiB PNG. PNG dimensions are limited to 16,384 per axis and 32 megapixels.
-- **Text preview length:** length of the compact row, independent of full-entry previews.
-- **Paste on select / Paste key combination:** optional simulated paste; Ctrl+V by default. Terminals commonly need Ctrl+Shift+V. Shift+Insert may use PRIMARY in some applications.
-- **Private mode:** stop recording new copies, including cancellation of pending reads. Existing history is not erased.
-- **Excluded application IDs:** comma-separated desktop IDs or window classes. Exclusion is based on the focused application, not a guaranteed identification of a background clipboard owner.
-- **Expire unpinned entries after hours:** zero disables expiry. When enabled, expiry is checked at startup, when opening the popup, and once per minute while enabled. Pins are kept.
-- **Cache only favorites:** new unpinned text and images stay in memory. The existing persistent snapshot is rewritten and unreferenced cached images are removed after a successful save. This is not secure erasure.
-- **Track primary selection:** optionally capture text selected with the mouse (off by default).
-- **Confirm clear:** confirmation for both menu and shortcut actions (on by default).
-- **Typeahead search, Notify on copy, Strip text, Move item first:** control search visibility, content-free notifications, whitespace trimming, and selection ordering.
-- **Keyboard shortcuts:** popup, next/previous entry, private mode, and clear history. Initially unassigned. Use GTK accelerator syntax such as `<Super>v`; empty disables a binding. Duplicate bindings within the extension are rejected.
+- **Preview Length:** length of the compact row, independent of full-entry previews.
+- **Paste Automatically / Paste Shortcut:** optional simulated paste; Ctrl+V by default. Terminals commonly need Ctrl+Shift+V. Shift+Insert may use PRIMARY in some applications.
+- **Private Mode:** stop recording new copies, including cancellation of pending reads. Existing history is not erased.
+- **Excluded Applications:** comma-separated desktop IDs or window classes. Exclusion is based on the focused application, not a guaranteed identification of a background clipboard owner.
+- **Remove Entries After (Hours):** zero disables expiry. When enabled, expiry is checked at startup, when opening the popup, and once per minute while enabled. Pins are kept.
+- **Save Only Favorites:** new unpinned text and images stay in memory. The existing persistent snapshot is rewritten and unreferenced cached images are removed after a successful save. This is not secure erasure.
+- **Include Selected Text:** optionally capture text selected with the mouse (off by default).
+- **Confirm Before Clearing:** confirmation for both menu and shortcut actions (on by default).
+- **Search as You Type, Copy Notifications, Trim Whitespace, Move Selected Entry to Top:** control search visibility, content-free notifications, whitespace trimming, and selection ordering.
+- **Keyboard Shortcuts:** popup, next/previous entry, private mode, and clear history. Initially unassigned. Select an action and press the desired combination; no accelerator syntax needs to be typed. Esc cancels, and the remove button or Backspace in the editor clears the assignment. Duplicate bindings within the extension are rejected. The master switch disables shortcuts while preserving their assignments.
 
 ## Scope and limitations
 

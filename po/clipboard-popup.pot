@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 17:37+0530\n"
+"POT-Creation-Date: 2026-10-16 21:51+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -49,7 +49,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: extension/actions.js:151 extension/prefs.js:186
+#: extension/actions.js:151 extension/menu.js:71
 msgid "Clear history"
 msgstr ""
 
@@ -85,7 +85,7 @@ msgstr ""
 msgid "Favorites only"
 msgstr ""
 
-#: extension/menu.js:63 extension/prefs.js:67
+#: extension/menu.js:63
 msgid "Private mode"
 msgstr ""
 
@@ -93,227 +93,363 @@ msgstr ""
 msgid "Preferences"
 msgstr ""
 
-#: extension/menu.js:70
+#: extension/menu.js:72
 msgid "Clear history (keeps pinned)"
 msgstr ""
 
-#: extension/menu.js:98
+#: extension/menu.js:100
 msgid "Favorite limit reached"
 msgstr ""
 
-#: extension/menu.js:118
+#: extension/menu.js:138
 msgid "Image"
 msgstr ""
 
-#: extension/menu.js:128
+#: extension/menu.js:148
 msgid "Unpin"
 msgstr ""
 
-#: extension/menu.js:128
+#: extension/menu.js:148
 msgid "Pin"
 msgstr ""
 
-#: extension/menu.js:129
+#: extension/menu.js:149
 msgid "Preview"
 msgstr ""
 
-#: extension/menu.js:130
+#: extension/menu.js:150
 msgid "Delete"
 msgstr ""
 
-#: extension/menu.js:132
+#: extension/menu.js:152
 msgid "Pinned"
 msgstr ""
 
-#: extension/menu.js:140
+#: extension/menu.js:160
 msgid "History unavailable. Check the Shell log."
 msgstr ""
 
-#: extension/menu.js:140
+#: extension/menu.js:160
 msgid "Loading clipboard history…"
 msgstr ""
 
-#: extension/menu.js:142
+#: extension/menu.js:162
 msgid "No matching entries"
 msgstr ""
 
-#: extension/menu.js:142
+#: extension/menu.js:162
 msgid "Clipboard history is empty"
 msgstr ""
 
-#: extension/menu.js:144
+#: extension/menu.js:164
 msgid "More entries match. Refine your search."
 msgstr ""
 
-#: extension/prefs.js:13
-msgid "Clipboard history"
+#: extension/prefs.js:15
+msgid "General"
 msgstr ""
 
-#: extension/prefs.js:17
-msgid "History size"
+#: extension/prefs.js:21
+msgid "History"
 msgstr ""
 
-#: extension/prefs.js:18
-msgid "Maximum unpinned entries kept"
+#: extension/prefs.js:22
+msgid "Choose how much clipboard content to keep."
 msgstr ""
 
-#: extension/prefs.js:25
-msgid "Maximum displayed entries"
+#: extension/prefs.js:27
+msgid "History Size"
 msgstr ""
 
-#: extension/prefs.js:26
-msgid "Entries rendered in the popup; older ones stay in history"
+#: extension/prefs.js:28
+msgid "Maximum number of entries, excluding favorites"
 msgstr ""
 
-#: extension/prefs.js:33
-msgid "Content budget (MB)"
+#: extension/prefs.js:35
+msgid "Content Limit (MB)"
 msgstr ""
 
-#: extension/prefs.js:34
-msgid "Includes pinned content. Existing pins survive a lower limit."
+#: extension/prefs.js:36
+msgid ""
+"Includes favorites. Existing favorites are kept if the limit is reduced."
 msgstr ""
 
-#: extension/prefs.js:41
-msgid "Text preview length"
+#: extension/prefs.js:43
+msgid "Trim Whitespace"
 msgstr ""
 
-#: extension/prefs.js:42
-msgid "Characters shown per text entry"
+#: extension/prefs.js:44
+msgid "Remove spaces and blank lines at the start and end of copied text"
 msgstr ""
 
 #: extension/prefs.js:49
-msgid "Paste on select"
+msgid "Popup"
 msgstr ""
 
-#: extension/prefs.js:50
-msgid "Simulate a paste keypress after picking an entry"
+#: extension/prefs.js:53
+msgid "Visible Entries"
 msgstr ""
 
-#: extension/prefs.js:57
-msgid "Paste key combination"
+#: extension/prefs.js:54
+msgid "Limit the list length without removing older history"
 msgstr ""
 
-#: extension/prefs.js:58
-msgid "Application-dependent. Terminals commonly use Ctrl+Shift+V."
+#: extension/prefs.js:61
+msgid "Preview Length"
 msgstr ""
 
-#: extension/prefs.js:68
-msgid "Stop recording clipboard contents until turned off"
+#: extension/prefs.js:62
+msgid "Number of characters shown for each text entry"
 msgstr ""
 
-#: extension/prefs.js:74
-msgid "Notify on copy"
+#: extension/prefs.js:69
+msgid "Search as You Type"
 msgstr ""
 
-#: extension/prefs.js:75
-msgid "Show an OSD when new content is recorded"
+#: extension/prefs.js:70
+msgid "Show a search field in the popup"
 msgstr ""
 
-#: extension/prefs.js:81
-msgid "Confirm clear"
+#: extension/prefs.js:76
+msgid "Copy Notifications"
+msgstr ""
+
+#: extension/prefs.js:77
+msgid "Show a notification when an entry is added to history"
 msgstr ""
 
 #: extension/prefs.js:82
-msgid "Ask before clearing history from menus or shortcuts"
+msgid "Selecting an Entry"
 msgstr ""
 
-#: extension/prefs.js:88
-msgid "Strip text"
+#: extension/prefs.js:86
+msgid "Paste Automatically"
 msgstr ""
 
-#: extension/prefs.js:89
-msgid "Trim whitespace from copied text"
+#: extension/prefs.js:87
+msgid "Paste into the active application when you select an entry"
+msgstr ""
+
+#: extension/prefs.js:94
+msgid "Paste Shortcut"
 msgstr ""
 
 #: extension/prefs.js:95
-msgid "Move item first"
+msgid "For terminals, try Ctrl+Shift+V"
 msgstr ""
 
-#: extension/prefs.js:96
-msgid "Selected entries jump to the top of history"
+#: extension/prefs.js:105
+msgid "Move Selected Entry to Top"
 msgstr ""
 
-#: extension/prefs.js:102
-msgid "Cache only favorites"
+#: extension/prefs.js:106
+msgid "Keep recently used entries at the start of history"
 msgstr ""
 
-#: extension/prefs.js:103
-msgid ""
-"New unpinned text and images stay in memory. Existing cache is rewritten."
-msgstr ""
-
-#: extension/prefs.js:109
-msgid "Enable keybindings"
-msgstr ""
-
-#: extension/prefs.js:110
-msgid "Master switch for all shortcuts"
-msgstr ""
-
-#: extension/prefs.js:116
-msgid "Typeahead search"
+#: extension/prefs.js:112
+msgid "Privacy"
 msgstr ""
 
 #: extension/prefs.js:117
-msgid "Filter history as you type in the popup"
+msgid "Recording"
+msgstr ""
+
+#: extension/prefs.js:118
+msgid "Control what is added to your clipboard history."
 msgstr ""
 
 #: extension/prefs.js:123
-msgid "Track primary selection"
+msgid "Private Mode"
 msgstr ""
 
 #: extension/prefs.js:124
-msgid "Record text selected with the mouse, not just copied"
+msgid "Pause recording until private mode is turned off"
 msgstr ""
 
 #: extension/prefs.js:130
-msgid "Expire unpinned entries after hours"
+msgid "Include Selected Text"
 msgstr ""
 
 #: extension/prefs.js:131
-msgid "Zero disables expiry. Favorites are kept."
+msgid "Also record text selected with the mouse, without copying"
+msgstr ""
+
+#: extension/prefs.js:137
+msgid "Excluded Applications"
 msgstr ""
 
 #: extension/prefs.js:138
-msgid "Excluded application IDs (comma-separated)"
-msgstr ""
-
-#: extension/prefs.js:146
-msgid "Password-manager hints are always respected"
-msgstr ""
-
-#: extension/prefs.js:147
 msgid ""
-"Unmarked secrets cannot be detected. Use private mode or exclude their "
-"application."
+"Do not record while these applications are focused. Enter application IDs or "
+"window classes, separated by commas."
 msgstr ""
 
-#: extension/prefs.js:151
-msgid "Keyboard shortcuts"
+#: extension/prefs.js:142
+msgid "Application IDs"
 msgstr ""
 
-#: extension/prefs.js:152
+#: extension/prefs.js:150
+msgid "Saved History"
+msgstr ""
+
+#: extension/prefs.js:153
+msgid "Save Only Favorites"
+msgstr ""
+
+#: extension/prefs.js:154
 msgid ""
-"Shortcuts are opt-in. Enter GTK notation such as &lt;Super&gt;v for Win+V-"
-"style access; this may conflict with GNOME notifications."
+"Remove other entries from saved history and keep them only until restart"
 msgstr ""
 
-#: extension/prefs.js:158
-msgid "empty disables"
+#: extension/prefs.js:160
+msgid "Remove Entries After (Hours)"
+msgstr ""
+
+#: extension/prefs.js:161
+msgid "Set to 0 to keep indefinitely. Favorites are never removed."
+msgstr ""
+
+#: extension/prefs.js:168
+msgid "Confirm Before Clearing"
+msgstr ""
+
+#: extension/prefs.js:169
+msgid "Ask before clearing history. Favorites are kept."
+msgstr ""
+
+#: extension/prefs.js:175
+msgid ""
+"Content marked as secret by password managers is never recorded. Unmarked "
+"secrets cannot be detected; use private mode or exclude the application."
 msgstr ""
 
 #: extension/prefs.js:182
-msgid "Popup at pointer"
+msgid "About"
 msgstr ""
 
-#: extension/prefs.js:183
-msgid "Next entry (older)"
+#: extension/prefs.js:198
+msgid "Clipboard Popup"
 msgstr ""
 
-#: extension/prefs.js:184
-msgid "Previous entry (newer)"
+#: extension/prefs.js:202
+msgid "Your clipboard history, close at hand"
 msgstr ""
 
-#: extension/prefs.js:185
-msgid "Toggle private mode"
+#: extension/prefs.js:212
+msgid "Version"
+msgstr ""
+
+#: extension/prefs.js:215
+msgid "Project Page"
+msgstr ""
+
+#: extension/prefs.js:216
+msgid "Documentation and source code"
+msgstr ""
+
+#: extension/prefs.js:217
+msgid "Report a Bug"
+msgstr ""
+
+#: extension/prefs.js:218
+msgid "Open the bug report form on GitHub"
+msgstr ""
+
+#: extension/prefs.js:225
+msgid "Shortcuts"
+msgstr ""
+
+#: extension/prefs.js:231
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+#: extension/prefs.js:232
+msgid "Turn off shortcuts without losing your assignments"
+msgstr ""
+
+#: extension/prefs.js:239
+msgid "Key Assignments"
+msgstr ""
+
+#: extension/prefs.js:240
+msgid ""
+"Shortcuts start unassigned. Click an action, then press your keys to set it. "
+"Super+V may conflict with GNOME notifications."
+msgstr ""
+
+#: extension/prefs.js:244
+msgid "Open Clipboard"
+msgstr ""
+
+#: extension/prefs.js:244
+msgid "Show the clipboard popup"
+msgstr ""
+
+#: extension/prefs.js:245
+msgid "Next Entry"
+msgstr ""
+
+#: extension/prefs.js:245
+msgid "Select the next older entry"
+msgstr ""
+
+#: extension/prefs.js:246
+msgid "Previous Entry"
+msgstr ""
+
+#: extension/prefs.js:246
+msgid "Select the next newer entry"
+msgstr ""
+
+#: extension/prefs.js:247
+msgid "Toggle Private Mode"
+msgstr ""
+
+#: extension/prefs.js:247
+msgid "Pause or resume recording"
+msgstr ""
+
+#: extension/prefs.js:248
+msgid "Clear History"
+msgstr ""
+
+#: extension/prefs.js:248
+msgid "Remove all entries except favorites"
+msgstr ""
+
+#: extension/prefs.js:255
+msgid "Click to change the shortcut"
+msgstr ""
+
+#: extension/prefs.js:258 extension/prefs.js:347
+msgid "Not Set"
+msgstr ""
+
+#: extension/prefs.js:263
+msgid "Remove shortcut"
+msgstr ""
+
+#: extension/prefs.js:305 extension/prefs.js:321
+msgid "Set Shortcut"
+msgstr ""
+
+#: extension/prefs.js:339
+msgid "Press a key combination to assign it"
+msgstr ""
+
+#: extension/prefs.js:351
+msgid "Esc to cancel · Backspace to remove"
+msgstr ""
+
+#: extension/prefs.js:376
+msgid "Include Ctrl, Alt, or Super in your shortcut"
+msgstr ""
+
+#: extension/prefs.js:387
+#, javascript-format
+msgid "Already used for “%s”"
+msgstr ""
+
+#: extension/prefs.js:416
+msgid "Could not open the link"
 msgstr ""

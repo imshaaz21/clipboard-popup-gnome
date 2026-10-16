@@ -63,21 +63,23 @@ class HistoryMenu {
             const privateItem = new PopupMenu.PopupSwitchMenuItem(_('Private mode'), ext._settings.get_boolean('private-mode'));
             this._connect(privateItem, 'toggled', () => ext._settings.set_boolean('private-mode', privateItem.state));
             menu.addMenuItem(privateItem);
-            const preferences = new PopupMenu.PopupMenuItem(_('Preferences'));
+            const preferences = new PopupMenu.PopupImageMenuItem(_('Preferences'), 'emblem-system-symbolic');
             this._connect(preferences, 'activate', () => { menu.close(); ext.openPreferences(); });
             menu.addMenuItem(preferences);
         }
-        const clear = new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
+        const clear = controls
+            ? new PopupMenu.PopupImageMenuItem(_('Clear history'), 'user-trash-symbolic')
+            : new PopupMenu.PopupMenuItem(_('Clear history (keeps pinned)'));
         this._connect(clear, 'activate', () => confirmClear(ext));
         menu.addMenuItem(clear);
         this._connect(menu.actor, 'captured-event', (_actor, event) => this._key(event));
         this._connect(menu, 'open-state-changed', (_menu, open) => {
             if (open)
-                this._search?.grab_key_focus();
+                this._focusSearch();
         });
         this.refresh();
         if (menu.isOpen)
-            this._search?.grab_key_focus();
+            this._focusSearch();
     }
 
     _connect(actor, signal, fn, row = false) {
@@ -103,12 +105,30 @@ class HistoryMenu {
         return focus ? this._rows.find(row => row.item === focus || row.item.contains(focus)) : null;
     }
 
+    _focusSearch() {
+        const target = this._search?.get_parent().visible ? this._search : this._menu.actor;
+        target.grab_key_focus();
+    }
+
     refresh() {
+        const ext = this._ext;
+        if (this._controls && this._search) {
+            const hasHistory = ext._history.entries.length > 0;
+            const focus = global.stage.get_key_focus();
+            const searchFocused = focus && this._search.contains(focus);
+            this._search.get_parent().visible = hasHistory;
+            if (!hasHistory && searchFocused)
+                this._focusSearch();
+            if (!hasHistory && this._search.text) {
+                // Reset a hidden query so the next copied entry is visible.
+                this._search.text = '';
+                return;
+            }
+        }
         const focusedId = this._focused()?.entry.id;
         disconnect(this._rowSignals);
         this._section.removeAll();
         this._rows = [];
-        const ext = this._ext;
         const limit = ext._settings.get_int('max-displayed-entries');
         const entries = filterEntries(ext._history.entries, this._search?.text ?? '', ext._favoritesOnly, limit + 1);
         for (const entry of entries.slice(0, limit)) {
@@ -144,8 +164,13 @@ class HistoryMenu {
             status = _('More entries match. Refine your search.');
         this._status.label.text = status;
         this._status.visible = !!status;
-        if (focusedId)
-            (this._rows.find(row => row.entry.id === focusedId)?.item ?? this._search ?? this._menu.actor).grab_key_focus();
+        if (focusedId) {
+            const item = this._rows.find(row => row.entry.id === focusedId)?.item;
+            if (item)
+                item.grab_key_focus();
+            else
+                this._focusSearch();
+        }
     }
 
     _key(event) {

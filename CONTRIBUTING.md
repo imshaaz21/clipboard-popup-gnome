@@ -33,7 +33,7 @@ Code layout:
 
 These follow the [extensions.gnome.org review guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html), which every release is checked against (see `.github/workflows/ci.yml`, the Shexli step).
 
-- No synchronous subprocesses and no blocking calls in the shell process — all file IO must be async.
+- No synchronous subprocesses and no blocking calls in the shell process - all file IO must be async.
 - Disconnect every signal, remove every main loop source, and destroy every object in `disable()`.
 - No `try`/`catch` around `enable()` or `disable()`.
 - Wrap user-visible strings in `_()`. Never put translatable text in a template literal.

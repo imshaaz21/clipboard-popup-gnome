@@ -13,4 +13,4 @@ You will get a reply within a week.
 ## Scope
 
 The extension runs inside the GNOME Shell process. It reads clipboard contents to build its history, writes the entry the user selects, and simulates a Ctrl+V keypress when paste-on-select is enabled.
-History is stored locally in `~/.cache/clipboard-popup/` and is never sent anywhere — the extension does not use the network. Note that clipboard history may contain sensitive data such as copied passwords; clear it or pin selectively as needed.
+History is stored locally in `~/.cache/clipboard-popup/` and is never sent anywhere - the extension does not use the network. Note that clipboard history may contain sensitive data such as copied passwords; clear it or pin selectively as needed.

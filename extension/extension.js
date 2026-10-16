@@ -96,7 +96,7 @@ export default class ClipboardPopupExtension extends Extension {
                     this._history.trim(this._settings.get_int('history-size'));
                 return;
             }
-            // Not text — try an image.
+            // Not text - try an image.
             clipboard.get_content(CLIP, 'image/png', (_cb2, bytes) => {
                 if (bytes) {
                     this._history.addImage(bytes);

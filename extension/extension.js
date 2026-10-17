@@ -17,6 +17,9 @@ import {
 } from './actions.js';
 import {rebuildMenu, rebuildPanelMenu, releaseMenu} from './menu.js';
 
+// How long an owner-changed echo of our own selection is ignored.
+const OWN_SELECTION_ECHO_US = 500000;
+
 export default class ClipboardPopupExtension extends Extension {
     enable() {
         this._settings = this.getSettings();
@@ -25,6 +28,7 @@ export default class ClipboardPopupExtension extends Extension {
         this._session = {};
         this._settingClipboard = false;
         this._selectionSerial = 0;
+        this._ownSelectionUntil = 0;
         this._cycleIndex = null;
         this._favoritesOnly = false;
         if (this._settings.get_boolean('paste-on-select'))
@@ -211,11 +215,16 @@ export default class ClipboardPopupExtension extends Extension {
     }
 
     _connectSelectionSignal() {
-        this._connect(this._selection, 'owner-changed', (_selection, type) => {
-            if (type === Meta.SelectionType.SELECTION_CLIPBOARD)
-                this._selectionSerial++;
-            this._capture.changed(type);
-        });
+        this._connect(this._selection, 'owner-changed', (_selection, type) => this._ownerChanged(type));
+    }
+
+    _ownerChanged(type) {
+        // XWayland re-announces our own selection a moment after we set it; that
+        // echo must not cancel the paste that follows the pick.
+        if (type === Meta.SelectionType.SELECTION_CLIPBOARD &&
+            GLib.get_monotonic_time() >= this._ownSelectionUntil)
+            this._selectionSerial++;
+        this._capture.changed(type);
     }
 
     _canCapture(type) {
@@ -301,6 +310,7 @@ export default class ClipboardPopupExtension extends Extension {
         this._menu.close();
         this._indicator.menu.close();
         this._capture.cancel();
+        this._ownSelectionUntil = GLib.get_monotonic_time() + OWN_SELECTION_ECHO_US;
         this._settingClipboard = true;
         try {
             setClipboardEntry(entry, St.Clipboard.get_default());
@@ -315,16 +325,21 @@ export default class ClipboardPopupExtension extends Extension {
 
     _waitToPaste(target, serial, attempt) {
         this._later(25, () => {
+            // Gone for good: another window or clipboard owner, or a locked session.
             if (global.display.focus_window !== target || serial !== this._selectionSerial ||
-                this._menu.isOpen || this._indicator.menu.isOpen || this._dialog || Main.modalCount > 0 ||
-                Main.sessionMode.isLocked || Main.overview.visible)
+                Main.sessionMode.isLocked)
                 return;
             const modifiers = global.get_pointer()[2] &
                 (Clutter.ModifierType.SHIFT_MASK | Clutter.ModifierType.CONTROL_MASK |
                  Clutter.ModifierType.MOD1_MASK | Clutter.ModifierType.SUPER_MASK);
-            if (modifiers || global.stage.get_key_focus()) {
+            // Transient: the menu is still closing, a modal is up, or a key is held.
+            if (modifiers || global.stage.get_key_focus() || this._menu.isOpen ||
+                this._indicator.menu.isOpen || this._dialog || Main.modalCount > 0 ||
+                Main.overview.visible) {
                 if (attempt < 20)
                     this._waitToPaste(target, serial, attempt + 1);
+                else
+                    showOsd('dialog-warning-symbolic', _('Copied. Paste manually.'));
                 return;
             }
             sendPaste(this);

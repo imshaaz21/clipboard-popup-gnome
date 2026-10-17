@@ -47,6 +47,7 @@ class Store {
 const {History, filterEntries, MAX_TEXT_BYTES, MAX_IMAGE_BYTES} = await load('../extension/history.js', {
     'gi://Gio': {default: {File: {new_for_path: () => ({load_contents_async() {}})}}},
     './storage.js': {HistoryStorage: Store},
+    './pixels.js': {samePixels: (a, b) => a.get_data()[40] === b.get_data()[40]},
 });
 const png = (width = 1, height = 1) => {
     const data = new Uint8Array(33);
@@ -71,6 +72,19 @@ test('image byte accounting uses get_size()', async () => {
     const {h} = await history();
     const entry = h.addImage(png());
     assert.equal(entry.size, 33);
+});
+test('a re-encoded copy of the newest image is not added twice', async () => {
+    const {h} = await history();
+    const encode = marker => {
+        const data = new Uint8Array(41);
+        data.set(png(4, 4).get_data());
+        data[40] = marker; // stands in for pixel content in the mocked comparison
+        return new Bytes(data);
+    };
+    const first = h.addImage(encode(1));
+    assert.equal(h.addImage(encode(1)), first);
+    assert.notEqual(h.addImage(encode(2)), first);
+    assert.equal(h.entries.length, 2);
 });
 test('invalid and decompression-bomb PNG headers are rejected', async () => {
     const {h} = await history();
@@ -416,6 +430,16 @@ test('paste is cancelled when clipboard ownership changes', () => {
     ext._selectionSerial++;
     queue.shift()();
     assert.equal(events.length, 0);
+});
+test('an echo of our own selection does not cancel the paste, a later change does', () => {
+    const {ext} = pasteFixture();
+    ext._capture = {changed() {}};
+    ext._ownSelectionUntil = GLib.get_monotonic_time() + 500000;
+    ext._ownerChanged(Meta.SelectionType.SELECTION_CLIPBOARD);
+    assert.equal(ext._selectionSerial, 1);
+    ext._ownSelectionUntil = GLib.get_monotonic_time() - 1;
+    ext._ownerChanged(Meta.SelectionType.SELECTION_CLIPBOARD);
+    assert.equal(ext._selectionSerial, 2);
 });
 test('paste waits for held modifiers to be released', () => {
     const {ext, target, queue, events} = pasteFixture();

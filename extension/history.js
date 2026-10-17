@@ -1,11 +1,14 @@
 import GLib from 'gi://GLib';
 
+import {samePixels} from './pixels.js';
 import {HistoryStorage} from './storage.js';
 
 // A single entry above these sizes is never stored: big pastes would bloat RAM and history.json.
 export const MAX_TEXT_BYTES = 1 << 20;
 export const MAX_IMAGE_BYTES = 8 << 20;
 const MAX_PINNED = 200;
+// Screenshot tools can offer the same picture twice, re-encoded, within milliseconds.
+const REENCODE_WINDOW_MS = 5000;
 
 export function imageSize(bytes) {
     if (!bytes || bytes.get_size() < 33 || bytes.get_size() > MAX_IMAGE_BYTES)
@@ -155,7 +158,8 @@ export class History {
         if (!entry)
             return null;
         const duplicate = this.entries.find(e => e.kind === entry.kind &&
-            (e.kind === 'text' ? e.text === entry.text : e.imgHash === entry.imgHash));
+            (e.kind === 'text' ? e.text === entry.text : e.imgHash === entry.imgHash)) ??
+            this._reencodedImage(entry);
         if (duplicate) {
             duplicate.timestamp = Date.now();
             this.entries = [duplicate, ...this.entries.filter(e => e !== duplicate)];
@@ -169,6 +173,15 @@ export class History {
         this.entries.unshift(entry);
         this._changed();
         return entry;
+    }
+
+    // Same pixels as the newest image, seen moments ago: a re-encoding, not a new copy.
+    _reencodedImage(entry) {
+        const newest = this.entries.find(e => e.kind === 'image');
+        if (entry.kind !== 'image' || !newest?._bytes || Date.now() - newest.timestamp > REENCODE_WINDOW_MS)
+            return null;
+        const dims = bytes => bytes.get_data().slice(16, 24).join();
+        return dims(newest._bytes) === dims(entry._bytes) && samePixels(newest._bytes, entry._bytes) ? newest : null;
     }
 
     addText(text) {

@@ -3,11 +3,13 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keep-a-changelog.com/en/1.1.0/).
 
-## [1.0.0] - Unreleased
+## [1.0.1] - Unreleased
 
 ### Fixed
 - A screenshot no longer appears twice: images that decode to identical pixels (re-encoded by the screenshot tool within seconds) are deduplicated
 - Paste-on-select no longer cancels when XWayland echoes the clipboard right after a pick (browser URL bars), and waits through transient menu/modal/key-focus states, then shows "Copied. Paste manually." instead of failing silently
+
+## [1.0.0] - Unreleased
 
 ### Added
 - Initial release: compact clipboard history popup near supported text cursors, the pointer, or the focused window

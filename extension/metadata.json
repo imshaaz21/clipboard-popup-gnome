@@ -11,6 +11,6 @@
     "50"
   ],
   "url": "https://github.com/imshaaz21/clipboard-popup-gnome",
-  "version-name": "1.0.0",
+  "version-name": "1.0.1",
   "settings-schema": "org.gnome.shell.extensions.clipboard-popup"
 }
